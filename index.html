@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Broodje Dunner - Weekmenu Planner</title>
+
+<!-- PWA / iOS Homescreen meta tags -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Weekmenu">
+<meta name="theme-color" content="#e91e8c">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- App icon (inline SVG as data URI) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSIjZTkxZThjIi8+PHRleHQgeD0iOTAiIHk9IjEwNSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSItYXBwbGUtc3lzdGVtLHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iNjAiIGZvbnQtd2VpZ2h0PSI3MDAiPkJEPC90ZXh0Pjwvc3ZnPg==">
+
+<!-- Splash screen color -->
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<style>
+:root {
+  --pink: #e91e8c;
+  --pink-light: #f8e0f0;
+  --pink-dark: #c4176f;
+  --bg: #faf5f7;
+  --card: #ffffff;
+  --text: #2d2d2d;
+  --text-light: #666;
+  --border: #e8dde3;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --radius: 12px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { height: 100%; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100%;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+  padding-bottom: calc(60px + var(--safe-bottom));
+  padding-top: var(--safe-top);
+  overscroll-behavior: none;
+}
+
+/* HEADER */
+.header {
+  background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+  color: white;
+  padding: 16px 20px;
+  padding-top: calc(16px + var(--safe-top));
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(233,30,140,0.3);
+  position: relative;
+  z-index: 100;
+}
+.header h1 { font-size: 1.4em; font-weight: 700; }
+.header p { font-size: 0.8em; opacity: 0.9; margin-top: 2px; }
+
+/* BOTTOM TAB BAR (iOS-style) */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(255,255,255,0.95);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  display: flex;
+  border-top: 1px solid var(--border);
+  padding-bottom: var(--safe-bottom);
+  z-index: 100;
+}
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px 6px;
+  cursor: pointer;
+  color: var(--text-light);
+  font-size: 0.65em;
+  font-weight: 500;
+  gap: 3px;
+  transition: color 0.2s;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.tab-item.active { color: var(--pink); }
+.tab-item svg { width: 24px; height: 24px; }
+.tab-item.active svg { stroke-width: 2.5; }
+
+/* CONTENT */
+.content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 12px;
+}
+
+/* WEEKMENU */
+.week-grid { display: grid; gap: 10px; }
+.day-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.day-header {
+  background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+  color: white;
+  padding: 10px 14px;
+  font-weight: 700;
+  font-size: 0.9em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.day-meals { padding: 6px; }
+.meal-slot {
+  display: flex;
+  align-items: center;
+  padding: 7px 6px;
+  border-bottom: 1px solid var(--border);
+  gap: 8px;
+}
+.meal-slot:last-child { border-bottom: none; }
+.meal-label {
+  font-size: 0.7em;
+  font-weight: 700;
+  color: var(--pink);
+  text-transform: uppercase;
+  min-width: 50px;
+}
+.meal-recipe {
+  flex: 1;
+  font-size: 0.85em;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--pink-light);
+  border: 1px dashed var(--pink);
+  transition: all 0.2s;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.meal-recipe.empty {
+  color: var(--text-light);
+  background: #f5f0f3;
+  border-color: var(--border);
+  font-style: italic;
+  font-size: 0.78em;
+}
+.meal-recipe:active { transform: scale(0.97); }
+.meal-remove {
+  background: none;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 1.3em;
+  padding: 6px 10px;
+  border-radius: 6px;
+  -webkit-tap-highlight-color: transparent;
+}
+.meal-remove:active { color: #e74c3c; background: #fde; }
+.clear-day {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  font-size: 0.75em;
+  padding: 4px 8px;
+}
+
+/* RECIPE PICKER MODAL */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 200;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: white;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  padding-bottom: var(--safe-bottom);
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.modal-handle {
+  width: 36px;
+  height: 5px;
+  background: #ddd;
+  border-radius: 3px;
+  margin: 8px auto;
+}
+.modal-header {
+  padding: 8px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.modal-title {
+  font-weight: 700;
+  font-size: 1.05em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-close {
+  background: #f0f0f0;
+  border: none;
+  font-size: 1em;
+  cursor: pointer;
+  color: var(--text-light);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-search {
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 16px; /* Prevents iOS zoom */
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.modal-search:focus { border-color: var(--pink); }
+.modal-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.filter-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: white;
+  cursor: pointer;
+  font-size: 0.8em;
+  font-weight: 500;
+  transition: all 0.2s;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.filter-btn.active {
+  background: var(--pink);
+  color: white;
+  border-color: var(--pink);
+}
+.filter-btn:active { transform: scale(0.95); }
+.modal-list {
+  overflow-y: auto;
+  flex: 1;
+  padding: 6px;
+  -webkit-overflow-scrolling: touch;
+}
+.recipe-item {
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.1s;
+  border: 1px solid transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.recipe-item:active {
+  background: var(--pink-light);
+  border-color: var(--pink);
+}
+.recipe-item-name { font-weight: 500; font-size: 0.92em; }
+.recipe-item-meta { font-size: 0.72em; color: var(--text-light); margin-top: 2px; }
+.recipe-item-type {
+  font-size: 0.68em;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.type-ontbijt { background: #fff3cd; color: #856404; }
+.type-lunch { background: #d4edda; color: #155724; }
+.type-diner { background: #cce5ff; color: #004085; }
+
+/* RECIPE DETAIL MODAL */
+.detail-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 250;
+  align-items: flex-end;
+  justify-content: center;
+}
+.detail-overlay.show { display: flex; }
+.detail-modal {
+  background: white;
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 550px;
+  max-height: 90vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 8px 20px 24px;
+  padding-bottom: calc(24px + var(--safe-bottom));
+  animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.detail-modal h2 { color: var(--pink); margin-bottom: 4px; font-size: 1.2em; }
+.detail-meta { font-size: 0.82em; color: var(--text-light); margin-bottom: 16px; }
+.detail-section { margin-bottom: 16px; }
+.detail-section h3 {
+  font-size: 0.8em;
+  text-transform: uppercase;
+  color: var(--pink);
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+.ingredient-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.88em;
+}
+.ingredient-row:last-child { border: none; }
+.step-item {
+  padding: 5px 0;
+  font-size: 0.88em;
+  display: flex;
+  gap: 8px;
+}
+.step-num {
+  color: var(--pink);
+  font-weight: 700;
+  min-width: 20px;
+}
+.detail-close {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background: var(--pink);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+  -webkit-appearance: none;
+}
+.detail-close:active { background: var(--pink-dark); }
+
+/* ALLE RECEPTEN TAB */
+.recipes-grid { display: grid; gap: 8px; }
+.recipe-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.recipe-card:active {
+  transform: scale(0.98);
+  background: var(--pink-light);
+}
+
+/* BOODSCHAPPENLIJST */
+.shopping-list {
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.shopping-header {
+  background: linear-gradient(135deg, var(--pink), var(--pink-dark));
+  color: white;
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.shopping-header h2 { font-size: 1.05em; }
+.shopping-actions { display: flex; gap: 6px; }
+.shopping-btn {
+  padding: 7px 14px;
+  border: 1px solid rgba(255,255,255,0.5);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  cursor: pointer;
+  font-size: 0.78em;
+  font-weight: 500;
+  -webkit-user-select: none;
+}
+.shopping-btn:active { background: rgba(255,255,255,0.35); }
+.shopping-category {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.shopping-category h3 {
+  font-size: 0.82em;
+  text-transform: uppercase;
+  color: var(--pink);
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+.shopping-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 8px 0;
+  gap: 12px;
+  font-size: 0.88em;
+}
+.shopping-check {
+  width: 24px;
+  height: 24px;
+  border: 2px solid var(--border);
+  border-radius: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  -webkit-user-select: none;
+  font-size: 0.85em;
+}
+.shopping-check.checked {
+  background: var(--pink);
+  border-color: var(--pink);
+  color: white;
+}
+.shopping-check:active { transform: scale(0.9); }
+.shopping-item-text { flex: 1; line-height: 1.4; }
+.shopping-item.checked-item .shopping-item-text {
+  text-decoration: line-through;
+  color: var(--text-light);
+}
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-light);
+}
+.empty-state-icon { font-size: 3em; margin-bottom: 12px; }
+.empty-state p { font-size: 0.92em; line-height: 1.5; }
+.persons-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  background: var(--pink-light);
+  justify-content: center;
+}
+.persons-selector label { font-weight: 600; font-size: 0.88em; }
+.persons-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--pink);
+  background: white;
+  color: var(--pink);
+  font-size: 1.3em;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-user-select: none;
+}
+.persons-btn:active { background: var(--pink); color: white; }
+.persons-count {
+  font-size: 1.3em;
+  font-weight: 700;
+  color: var(--pink);
+  min-width: 30px;
+  text-align: center;
+}
+.search-bar { margin-bottom: 10px; }
+.search-bar input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 16px; /* Prevents iOS zoom */
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.search-bar input:focus { border-color: var(--pink); }
+.filter-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.recipe-count {
+  font-size: 0.82em;
+  color: var(--text-light);
+  margin-bottom: 10px;
+}
+
+/* iPad adjustments */
+@media (min-width: 768px) {
+  .content { padding: 20px; }
+  .week-grid { grid-template-columns: 1fr 1fr; }
+  .recipes-grid { grid-template-columns: 1fr 1fr; }
+  .modal { max-width: 500px; margin: 0 auto; border-radius: 20px 20px 0 0; }
+  .detail-modal { max-width: 500px; margin: 0 auto; }
+  .day-card { min-height: 160px; }
+}
+
+/* Large iPad / Desktop */
+@media (min-width: 1024px) {
+  .week-grid { grid-template-columns: repeat(3, 1fr); }
+  .recipes-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1118;
+    --card: #2a1f25;
+    --text: #f0e8ec;
+    --text-light: #a89aa0;
+    --border: #3d2f36;
+    --pink-light: #3d1a2e;
+    --shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  .tab-bar { background: rgba(42,31,37,0.95); }
+  .modal, .detail-modal { background: var(--card); }
+  .modal-close { background: #3d2f36; color: var(--text-light); }
+  .modal-search { background: var(--bg); color: var(--text); }
+  .search-bar input { background: var(--bg); color: var(--text); }
+  .filter-btn { background: var(--bg); color: var(--text); }
+  .meal-recipe.empty { background: #231a1e; }
+  .recipe-item:active { background: var(--pink-light); }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Broodje Dunner</h1>
+  <p>Weekmenu Planner & Boodschappenlijst</p>
+</div>
+
+<div class="content" id="content"></div>
+
+<!-- Bottom Tab Bar (iOS-style) -->
+<div class="tab-bar">
+  <div class="tab-item active" onclick="showTab('weekmenu')" id="tab-weekmenu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+      <line x1="16" y1="2" x2="16" y2="6"></line>
+      <line x1="8" y1="2" x2="8" y2="6"></line>
+      <line x1="3" y1="10" x2="21" y2="10"></line>
+    </svg>
+    <span>Weekmenu</span>
+  </div>
+  <div class="tab-item" onclick="showTab('recepten')" id="tab-recepten">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+    </svg>
+    <span>Recepten</span>
+  </div>
+  <div class="tab-item" onclick="showTab('boodschappen')" id="tab-boodschappen">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="9" cy="21" r="1"></circle>
+      <circle cx="20" cy="21" r="1"></circle>
+      <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+    </svg>
+    <span>Boodschappen</span>
+  </div>
+</div>
+
+<!-- Recipe Picker Modal -->
+<div class="modal-overlay" id="pickerModal" onclick="if(event.target===this)closePicker()">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-title">
+        <span id="pickerTitle">Kies een recept</span>
+        <button class="modal-close" onclick="closePicker()">&#10005;</button>
+      </div>
+      <input type="text" class="modal-search" id="pickerSearch" placeholder="Zoek recept..." oninput="filterPicker()">
+      <div class="modal-filters" id="pickerFilters"></div>
+    </div>
+    <div class="modal-list" id="pickerList"></div>
+  </div>
+</div>
+
+<!-- Recipe Detail Modal -->
+<div class="detail-overlay" id="detailModal" onclick="if(event.target===this)closeDetail()">
+  <div class="detail-modal" id="detailContent">
+    <div class="modal-handle"></div>
+  </div>
+</div>
+
+<script>
+const RECIPES = [{"id": 1, "name": "Chocoatmeal", "book": 2, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Grof volkoren havervlokken", "amount": "40  gram"}, {"name": "Ongezoete amandelmelk", "amount": "250 ml"}, {"name": "Bevroren aardbeien", "amount": "40 gram"}, {"name": "Nocilla hazelnoot pasta", "amount": "20 gram"}, {"name": "Zout", "amount": "Snufje"}], "steps": [" Doe de amandelmelk, havervlokken, hazelnoot pasta en zout in een steelpannet breng alles aan de kook", " Roer door tot het een stevig papje is.", " Doe alles in een bakje en maak af met de bevroren aardbeien.", " ENJOY!"], "page": 6}, {"id": 2, "name": "Green fluff", "book": 2, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Magere franse kwark", "amount": "200 gram"}, {"name": "Spinazie", "amount": "1 handje"}, {"name": "Bevroren mango", "amount": "70 gram"}, {"name": "Ananas", "amount": "60 gram"}, {"name": "Avocado", "amount": "45 gram"}, {"name": "Kaneel", "amount": "Snufje"}, {"name": "Rozijnen", "amount": "10 gram"}, {"name": "Bio cornflakes", "amount": "10 gram"}, {"name": "Stevia", "amount": "2 druppels"}], "steps": [" Doe de kwark, spinazie, mango, ananas, avocado, kaneel en stevia in de blender.", " Doe alles in een bakje en maak af met de rozijnen en cornflakes.", " ENJOY! De reden dat deze smoothie zo mega fluffy is komt door de avocado, je proeft de avocado totaal niet maar hij maakt de smoothie heel erg romig. Dit is dus ook handig voor in sauzen bijvoorbeeld! Boodschappenlijst green fluff Magere franse kwark 200 gram Spinazie 1 handje Bevroren mango 70 gram Ananas 60 gram Avocado 45 gram Kaneel Snufje Rozijnen 10 gram Bio cornflakes 10 gram Stevia 2 druppels"], "page": 7}, {"id": 3, "name": "BreakFAST", "book": 2, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Banaan", "amount": "halve"}, {"name": "Bloedsinaasappel", "amount": "1 stuk"}, {"name": "Optimel bosvruchten yoghurt", "amount": "250 ml"}, {"name": "Rozijnen", "amount": "10 gram"}, {"name": "Grof volkoren havervlokken", "amount": "2 el"}, {"name": "Kaneel", "amount": "Snufje"}], "steps": ["Pak 2 stuks fruit naar keuze.", "Doe 250 ml optimel bosvruchten yoghurt in een bakje en maak af met het fruit, de kaneel en de havervlokken.", "ENJOY! De naam zegt het al, dit is een snel ontbijtje voor degene die zich verslapen hebben of niet langer dan 5 minuten hebben om hun ontbijtje te maken."], "page": 8}, {"id": 4, "name": "Meloentje kampioentje", "book": 2, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Meloen", "amount": "halve"}, {"name": "Magere franse kwark", "amount": "150 gram"}, {"name": "Blauwe bessen", "amount": "15 gram"}, {"name": "Kaneel", "amount": "snufje"}, {"name": "Rozijnen", "amount": "10 gram"}, {"name": "Honing", "amount": "1 tl"}], "steps": [" Snijd de meloen door de midden en verwijder de pitjes.", " Doe de kwark in de meloen.", " Maak af met de blauwe bessen, rozijnen, honing en kaneel.", " ENJOY! Ook dit is een top receptje voor de snelle ontbijters!"], "page": 9}, {"id": 5, "name": "Pannenkoek choco- aardbei", "book": 2, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Banaan", "amount": "1 stuk"}, {"name": "Ei", "amount": "2 stuks"}, {"name": "Bevroren aardbeien", "amount": "5 stuks"}, {"name": "Honing", "amount": "10 gram"}, {"name": "Grof volkoren havervlokken", "amount": "2 el"}, {"name": "Nocilla hazelnootpasta", "amount": "1tl"}], "steps": [" Prak de banaan in een mengbeker", " Voeg de eieren, honing en de havervlokken toe in de mengbeker en mix het met de staafmixer tot een beslag.", " Verhit een pan met een klein scheutje olie.", " Doe het beslag in de pan en bak de pannenkoek aan 2 kanten.", " Serveer de pannenkoek op een bord en doe de hazelnoot pasta erop, deze zal smelten. Maak af met de aardbeien.", " ENJOY!"], "page": 10}, {"id": 6, "name": "Broodje eiersalade", "book": 2, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Ei", "amount": "1 stuk"}, {"name": "Zero mayonaise", "amount": "20 gram"}, {"name": "Citroensap", "amount": "5 druppels"}, {"name": "Avocado", "amount": "25 gram"}, {"name": "Peper & zout", "amount": "Naar smaak"}, {"name": "Tuinkers", "amount": "handje"}], "steps": [" Rooster je boterham.", " Kook een eitje 7 minuten.", " Prak de avocado en het ei op een bordje.", " Voeg de mayonaise, het citroensap en de peper en zout toe.", " Meng alles tot het een eiersalade is.", " Maak af met de tuinkers.", " ENJOY! Boodschappenlijstje broodje eiersalade Volkoren boterham 1 stuk Ei 1 stuk Zero mayonaise 20 gram Citroensap 5 druppels Avocado 25 gram Peper & zout Naar smaak Tuinkers handje"], "page": 12}, {"id": 7, "name": "Broodje zalm", "book": 2, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Gerookte noorse zalm", "amount": "40 gram"}, {"name": "Zuivelspread bieslook light", "amount": "15 gram"}, {"name": "Ijsbergsla", "amount": "1 handje"}, {"name": "Bieslook", "amount": "2 sprieten"}, {"name": "Citroensap", "amount": "3/4 druppels"}], "steps": [" Besmeer je boterham met de zuivelspread.", " Leg de zalm erop en maak af met de bieslook, ijsbergsla en citroensap.", " ENJOY!"], "page": 13}, {"id": 8, "name": "Tosti caprese", "book": 2, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "2 stuks"}, {"name": "Mozzarella light", "amount": "35 gram"}, {"name": "Pesto", "amount": "8 gram"}, {"name": "Verse basilicum", "amount": "4 blaadjes"}, {"name": "Tomaat", "amount": "1 stuk"}, {"name": "Rode ui", "amount": "1/4"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": [" Beleg 1 boterham met de pesto, mozzarella, tomaat, basilicum en rode ui. Maak af met peper en zout", " Plaats je boterham onder de grill voor +/- 5 minuutjes op de hoogste stand.", " ENJOY! Boodschappenlijstje tosti caprese Volkoren boterham 2 stuks Mozzarella light 35 gram Pesto 8 gram Verse basilicum 4 blaadjes Tomaat 1 stuk Rode ui 1/4 Peper & zout Naar smaak"], "page": 14}, {"id": 9, "name": "Broodje knoflook champignons", "book": 2, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Gesneden champignons", "amount": "100 gram"}, {"name": "Spinazie", "amount": "2 handjes"}, {"name": "Feta", "amount": "15 gram"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": [" Rooster de boterham.", " Verhit een scheutje olie in de pan en pers de knoflook hierin uit.", " Doe de champignons, spinazie en peper en zout in de pan.", " Laat alles slenken.", " Doe alles op je broodje en sprenkel de feta kaas eroverheen.", " ENJOY! Tip: als je de knoflook na het bakken pas door de spinazie en champignons heen doet zal de smaak intenser worden!"], "page": 15}, {"id": 10, "name": "Tortilla kip-kerriemayo", "book": 2, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren wrap (Santa maria)", "amount": "1 stuk"}, {"name": "Avocado", "amount": "50 gram"}, {"name": "Gerookte kipfilet", "amount": "50 gram"}, {"name": "Zero mayonaise (remia)", "amount": "1 el"}, {"name": "Kerriepoeder", "amount": "2tl"}, {"name": "Kurkuma", "amount": "1/2 tl"}, {"name": "Uienpoeder", "amount": "1/2 tl"}, {"name": "Cherrytomaatjes", "amount": "3 stuks"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Snijd de avocado in plakjes en de tomaatjes in halfjes.", "Beleg de tortilla met de kipfilet, avocado en tomaatjes.", "Meng de eetlepel zero fritessaus met de uienpoeder, kurkuma, kerriepoeder en peper en zout.", "Doe de dressing over je tortilla en rol hem op.", "ENJOY!"], "page": 16}, {"id": 11, "name": "Broodje gezond", "book": 2, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Ei", "amount": "1 stuk"}, {"name": "Zuivelspread bieslook light", "amount": "15 gram"}, {"name": "Komkommer", "amount": "4 plakjes"}, {"name": "Cherry tomaatjes", "amount": "3 stuks"}, {"name": "Gerookte kipfilet", "amount": "3 plakken"}, {"name": "Witte ui", "amount": "Naar smaak"}, {"name": "Ijsbergsla", "amount": "Handje"}, {"name": "Peper & Zout", "amount": "Naar smaak"}], "steps": [" Kook een eitje 7 minuten.", " Smeer de zuivelspread op je boterham en beleg vervolgens alle ingrediënten, handig om de sla en ui onder je kipfilet te doen dan blijft het liggen ;-).", " ENJOY!"], "page": 17}, {"id": 12, "name": "Pizza Tonno", "book": 2, "meal_type": "diner", "portions": "1", "ingredients": [{"name": "Hüttenkäse", "amount": "100 gram"}, {"name": "Filodeeg", "amount": "4 vellen"}, {"name": "Tonijn op waterbasis", "amount": "1 blikje"}, {"name": "Rode ui", "amount": "Halve"}, {"name": "Zwarte olijven", "amount": "3 stuks"}, {"name": "Grote zoet zure augurken", "amount": "1 stuk"}, {"name": "Tomatenpuree", "amount": "2tl"}, {"name": "Peper & Zout", "amount": "Naar smaak"}], "steps": ["Verwarm de oven voor op 180ºC en leg een bakpapier op een bakplaat.", "Pak voorzichtig één vel filodeeg en leg het vel op een bakpapier. (Nog niet ontdooid? Doe hem voor 5 min tussen een natte theedoek).", "Bestrijk het velletje met wat olie (gebruik een bakkwast).", "Leg het tweede vel filodeeg eroverheen.", "Meng de Hüttenkäse met de tomatenpuree en verspreid over de pizzabodem.", "Bak de pizza in 10-15 minuutjes af.", "Laat de tonijn even uitlekken.", "Meng in een bakje de tonijn, rode ui, augurk en  olijven.", "Doe het tonijnmengsel op de pizza.", "ENJOY! Boodschappenlijstje pizza tonno Hüttenkäse 100 gram Filodeeg 4 vellen Tonijn op waterbasis 1 blikje Rode ui Halve Zwarte olijven 3 stuks Grote zoet zure augurken 1 stuk Tomatenpuree 2tl Peper & Zout Naar smaak"], "page": 19}, {"id": 13, "name": "Krokante kipburger", "book": 2, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Kipfilet", "amount": "300 gram"}, {"name": "Amandelmeel", "amount": "40 gram"}, {"name": "Zero fritessaus", "amount": "2 el"}, {"name": "Magere franse kwark", "amount": "1 el"}, {"name": "Cornflakes", "amount": "40 gram"}, {"name": "Ei", "amount": "1 stuk"}, {"name": "Paprikapoeder", "amount": "2 tl"}, {"name": "Witte ui", "amount": "Halve"}, {"name": "Volkoren bollen", "amount": "2 stuks"}, {"name": "Ijsbergsla", "amount": "1 handje"}], "steps": ["Verwarm de oven voor op 200ºC.", "Doe een bakpapiertje op het rooster.", "Zet 3 borden klaar. Bord 1: amandelmeel, bord 2: het ei met de paprikapoeder, bord 3: verkruimelde cornflakes.", "Roer het ei met de paprikapoeder even goed door.", "Haal de kipfilets door het meel, vervolgens door het eimengsel en als laatste door de cornflakes.", "Leg de kipfilet op het rooster en plaats voor 20 minuutjes in de oven. Is hij nog niet gaar? Doe hem wat langer in de oven.", "Voor de saus: meng de fritessaus en kwark door elkaar.", "Snij de ui in kleine blokjes en voeg deze toe aan je saus.", "Doe de kipburger op je broodje en maak af met de uienmayo en ijsbergsla.", "ENJOY! Je mag augurk, tomaat of komkommer toevoegen. Ik vond dat niet nodig, hij was goddelijk zo!"], "page": 20}, {"id": 14, "name": "Risotto geit", "book": 2, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Half volkoren risotto", "amount": "80 gram (ongekookt)"}, {"name": "Zachte geitenkaas", "amount": "100 gram"}, {"name": "Aardbeien", "amount": "100 gram"}, {"name": "Courgette", "amount": "100 gram"}, {"name": "Water", "amount": "600 ml"}, {"name": "Bio today bouillon", "amount": "1 tl"}, {"name": "Granaatappelpitjes", "amount": "30 gram"}, {"name": "Pompoenpitjes", "amount": "1 tl"}, {"name": "Peper & zout", "amount": "Naar smaak"}, {"name": "Paprikapoeder", "amount": "1 tl"}], "steps": ["Bereid de risotto volgens de verpakking, voeg tijdens het bereiden de tl paprikapoeder toe.", "Snijd de courgette in kleine blokjes en voeg toe bij de risotto zodra de risotto alle bouillon heeft opgenomen.", "Je kan vast 1/3 van de geitenkaas erbij doen zodat de risotto lekker smeuïg wordt, laat het even pruttelen voor 5 minuutjes.", "Serveer alles op een bordje.", "Voeg als laatste de granaatappelpitjes, pompoenpitjes, aardbeien en geitenkaas toe.", "Maak af met wat peper en zout naar smaak.", "ENJOY!"], "page": 21}, {"id": 15, "name": "Spaghetti gamba", "book": 2, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Zuivelspread bieslook light", "amount": "60 gram"}, {"name": "Wokgarnalen", "amount": "300 gram"}, {"name": "Peterselie", "amount": "2 sprieten"}, {"name": "Volkoren spaghetti", "amount": "120 gram"}, {"name": "(ongekookt) Courgette", "amount": "200 gram"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Kook de spaghetti volgens de aanwijzing op de verpakking.", "Pers de knoflook en hak de peterselie fijn.", "Doe de garnalen in een bakje, meng deze met de peterselie, knoflook en wat peper en zout.", "Verhit in een wokpan een scheutje olijfolie en voeg de garnalen hier aan toe. Bak ze lekker roze.", "Voeg de courgette bij de garnalen.", "Als de spaghetti gekookt is voeg je deze bij de garnalen.", "Voeg vervolgens de zuivelspread toe en roer het even door tot een smeuïg geheel.", "Serveer op een bordje.", "ENJOY!"], "page": 22}, {"id": 16, "name": "Zoete aardappeltaart", "book": 2, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Zoete aardappels", "amount": "3 stuks"}, {"name": "Hüttenkäse", "amount": "200 gram"}, {"name": "Spinazie", "amount": "200 gram"}, {"name": "Trostomaten", "amount": "2 stuks"}, {"name": "Bieslook", "amount": "10 sprieten"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Ei", "amount": "5 stuks"}, {"name": "Peper & Zout Vrij veel", "amount": ""}], "steps": ["Verwarm de oven voor op 200ºC.", "Schil en was de zoete aardappels, snij ze in dunne plakjes.", "Bedek een ovenschaal met de plakjes zoete aardappel tot je de ovenschaal niet meer ziet. De 3 zoete aardappels kunnen als het goed is helemaal op. Doe in de oven voor 15 min.", "Verhit een wokpan met een scheutje olie en pers de knoflook hierin uit.", "Laat de spinazie slenken in de pan.", "Snijd de bieslook fijn.", "Klop de eieren samen met de bieslook en Hüttenkäse  tot één mengsel. Voeg de spinazie en de peper en zout hierbij.", "Zodra de aardappels klaar zijn doe je het mengsel over de aardappelen, leg als laatste de tomaten boven op de taart.", "Bak de taart nog 20 tot 25 minuutjes af.", "ENJOY!"], "page": 23}, {"id": 17, "name": "Spaghetti feta tomaat", "book": 2, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Volkoren spaghetti", "amount": "120 gram"}, {"name": "(ongekookt) Cherry tomaatjes", "amount": "1 bakje"}, {"name": "Feta", "amount": "100 gram"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Basilicum", "amount": "10 blaadjes"}, {"name": "Peper & zout", "amount": "Naar smaak"}, {"name": "Oregano", "amount": "2 tl"}], "steps": ["Verwarm de oven voor op 200ºC.", "Doe alle tomaatjes in een ovenschaal.", "Doe hier overheen 2 tl oregano en 1 el olijfolie en mix het even door elkaar met de tomaatjes.", "Plaats het blok feta in het midden en bestrooi met wat peper en zout.", "Doe in de oven voor 25 minuutjes.", "Kook 10 minuten voor tijd de spaghetti.", "Zodra de tomaatjes en feta uit de oven komen kun je de spaghetti in de ovenschaal doen. Prak de tomaatjes en mix alles door elkaar. Doe in de schaal de basilicum en knoflook eroverheen.", "Verdeel over 2 bordjes.", "ENJOY!"], "page": 24}, {"id": 18, "name": "Fusilli ossenhaas", "book": 2, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Volkoren fusilli", "amount": "120 gram (ongekookt)"}, {"name": "Ossenhaas", "amount": "300 gram"}, {"name": "Kookroom light", "amount": "125 ml"}, {"name": "Tomatenpuree", "amount": "2 tl"}, {"name": "Witte ui Een halve", "amount": "Knoflook"}, {"name": "1 teentje Trostomaten", "amount": "1 stuk"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Snijd de ossenhaas in kleine blokjes.", "Mix de kookroom met de tomatenpuree in een bakje.", "Snijd de ui in kleine blokjes en voeg die bij de saus in het bakje.", "Kook de fusilli volgens de verpakking.", "Verhit een pan met een scheutje olijfolie, pers de knoflook hierin.", "Bak de ossenhaas op hoog vuur en schroei hem dicht.", "Voeg de fusilli hierbij en vervolgens het sausje. .", "Laat het iets indikken, snijd ondertussen het vruchtvlees uit de tomaat en snijd de rest in blokjes.", "Doe alles op een bordje en maak af met de tomaten blokjes.", "ENJOY!"], "page": 25}, {"id": 19, "name": "Courgette-prei soep", "book": 2, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Courgette", "amount": "2 stuks"}, {"name": "Prei", "amount": "1 stuk"}, {"name": "Wiite ui", "amount": "halve"}, {"name": "Bio today bouillon", "amount": "1 tl"}, {"name": "Feta kaas", "amount": "20 gram"}, {"name": "Ontbijtspek", "amount": "4 plakken a 60 gram"}, {"name": "Peper & Zout", "amount": "Naar smaak"}, {"name": "Dit gerecht mag flink wat peper en zout hebben, voel je vrij om kruiden er bij te doen die jij lekker vindt!", "amount": ""}], "steps": [" Snijd de ui, courgette en prei in stukken.", " Was de courgette en prei (handig in een vergiet).", " Verhit een scheutje olie in een soeppan en fruit de ui voor 3 minuutjes.", " Vul een mengbeker met 750ml water, voeg hierbij de tl bouillon.", " Voeg de bouillon bij de groentes en laat koken voor 10 minuten.", " Bak ondertussen in een koekenpan de ontbijtspek lekker krokant.", " Pureer de groentes, verdeel over 2 kommen en maak af met de ontbijtspek en feta kaas.", " ENJOY! Boodschappenlijstje courgette-prei soep Courgette 2 stuks Prei 1 stuk Wiite ui halve Bio today bouillon 1 tl Feta kaas 20 gram Ontbijtspek 4 plakken a 60 gram Peper & Zout Naar smaak Dit gerecht mag flink wat peper en zout hebben, voel je vrij om kruiden er bij te doen die jij lekker vindt!"], "page": 26}, {"id": 20, "name": "Frozen yoghurt", "book": 3, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Banaan", "amount": "1 stuk"}, {"name": "Optimel griekse yoghurt vanille", "amount": "300 gram"}, {"name": "Bevroren frambozen", "amount": "100 gram"}, {"name": "Blauwe bessen", "amount": "40 gram"}, {"name": "Honing", "amount": "1 el"}, {"name": "Pompoenpitten", "amount": "10 gram"}, {"name": "100% pindakaas naturel", "amount": "1 tl"}], "steps": ["Doe de banaan, honing en 200 ml griekse yoghurt in een mengbeker. Pureer dit met elkaar.", "Doe in een ander kommetje de andere 100 ml griekse yoghurt en doe hier 1/3 van de frambozen bij, pureer dit ook samen.", "Doe het banaanmengsel in een vierkant vershoudbakje en doe het frambozenmengsel hierop, smeer het wat uit met een lepel.", "Doe hierop de overige frambozen, blauwe bessen en pompoenpitten.", "Zet minstens 3 uur in de vriezer.", "Serveer het ’s ochtends met de pindakaas eroverheen!", "ENJOY! Tip: Haast? Maak het de avond ervoor en pak het ‘s morgens zo uit de koelkast! Handig om hem even 10 minuutjes te laten staan."], "page": 7}, {"id": 21, "name": "Kwarkbollen appel- kaneel", "book": 3, "meal_type": "ontbijt", "portions": "10 bollen", "ingredients": [{"name": "Optimel griekse yoghurt vanille", "amount": "200 gram"}, {"name": "Rozijnen", "amount": "70 gram"}, {"name": "Appel", "amount": "1 stuk"}, {"name": "Volkorenspeltmeel", "amount": "230 gram"}, {"name": "Ei", "amount": "2 stuks"}, {"name": "Bakpoeder", "amount": "2 tl"}, {"name": "Kaneel", "amount": "2 tl"}, {"name": "Stevia (zoetstof)", "amount": "1 tl"}], "steps": ["Verwarm de oven voor op 185ºC.", "Laat de rozijnen 5 minuten weken in warm water..", "Snijd de appel in blokkies.", "Meng de griekse yoghurt, eieren, bakpoeder, kaneel en stevia in een kom.", "Voeg de appel en rozijnen toe en roer nog even door.", "Doe de volkorenbloem erbij en kneed het goed door.", "Vet een bakplaat in en verdeel in ongeveer 10 gelijke bollen op de plaat.", "Doe 20 minuutjes in de oven..", "Pak er 2 per persoon voor ontbijt.", "ENJOY!"], "page": 8}, {"id": 22, "name": "Bananensplit", "book": 3, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Banaan", "amount": "1 stuk"}, {"name": "Optimel griekse yoghurt vanille", "amount": "100 gram"}, {"name": "Lindt 90% cacao reep", "amount": "8 gram"}, {"name": "Blauwe bessen", "amount": "40 gram"}, {"name": "Cornflakes", "amount": "5 gram"}, {"name": "Lijnzaad", "amount": "1/2 tl"}], "steps": ["Verwarm de chocolade au-bien marie.", "Snijd de banaan doormidden.", "Leg de banaan op een bordje en doe hier boven op de griekse yoghurt, cornflakes, lijnzaad, blauwe bessen en de gesmolten chocolade.", "ENJOY!"], "page": 9}, {"id": 23, "name": "Havermout strawcherry", "book": 3, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Volkoren havervlokken", "amount": "2 el"}, {"name": "Magere franse kwark", "amount": "200 gram"}, {"name": "Aardbeien", "amount": "100 gram"}, {"name": "Bevroren kersen", "amount": "80 gram"}, {"name": "Rozijnen", "amount": "10 gram"}, {"name": "Stevia", "amount": "2 druppels"}, {"name": "Avocado", "amount": "Halve"}], "steps": ["Doe alle ingrediënten behalve de rozijnen in de blender, bewaar 1/3 van de aardbeien voor de garneringen.", "Schenk alles in een kommetje.", "Maak af met de rest van de aardbeien en rozijnen.", "ENJOY! Volkoren havervlokken 2 el Magere franse kwark 200 gram Aardbeien 100 gram Bevroren kersen 80 gram Rozijnen 10 gram Stevia 2 druppels Avocado Halve"], "page": 10}, {"id": 24, "name": "Blueberry poffertjes", "book": 3, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Banaan", "amount": "1 stuk"}, {"name": "Blauwe bessen", "amount": "70 gram"}, {"name": "Bevroren frambozen", "amount": "30 gram"}, {"name": "Ei", "amount": "1 stuk"}, {"name": "Honing", "amount": "1 el"}, {"name": "Magere melk", "amount": "50 ml"}, {"name": "Volkoren havervlokken", "amount": "2 el"}], "steps": ["Doe alle ingrediënten behalve de bevroren frambozen in de blender of pureer het met de staafmixer tot een beslag. Houdt een paar bessen achter voor de topping.", "Vet een koekenpan in en zet op middelhoog vuur.", "Druppel het beslag voorzichtig met een eetlepel in de pan, maak rondjes van ongeveer twee euromunten.", "Doe dit tot het beslag op is, gaat het niet snel genoeg? Pak twee pannen.", "Serveer alles op een bordje en maak af met de frambozen en blauwe bessen.", "ENJOY! Tip: wacht tot je bubbeltjes ziet verschijnen boven op de poffertjes, zodra je die ziet kun je ze omflippen!"], "page": 11}, {"id": 25, "name": "Broodje bruschetta", "book": 3, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Tomaat", "amount": "3 stuks"}, {"name": "Basilicum", "amount": "3 blaadjes"}, {"name": "Olijfolie", "amount": "1 el"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Peper & Zout Aardig wat", "amount": ""}], "steps": [" Rooster je boterham goed krokant.", " Verwijder het vruchtvlees van de tomaten en snijd in blokkies.", " Snijd de basilicum fijn en doe in een bakje. Pers de knoflook en doe het erbij.", " Voeg de tomatenblokjes, olijfolie en de peper en zout  ook hierbij. Hussel alles goed door elkaar.", " Doe alles op je boterham en peuzel de rest lekker op.", " ENJOY! Tip: Doe de bruschetta in een bakkie en neem mee naar je werk!"], "page": 13}, {"id": 26, "name": "Broodje pinda/banaan", "book": 3, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "100% pindakaas", "amount": "30 gram"}, {"name": "Banaan", "amount": "Halve"}], "steps": [" Rooster de boterham.", " Smeer de pindakaas erop en leg vervolgens de banaan in plakjes bovenop.", " ENJOY! Tip: vries de andere helft van de banaan in, lekker voor door de smoothie!"], "page": 14}, {"id": 27, "name": "Tortilla rosbief", "book": 3, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren tortilla", "amount": "1 stuk"}, {"name": "Peperrosbief", "amount": "100 gram"}, {"name": "Zuivelspread bieslook light", "amount": "30 gram"}, {"name": "Cherrytomaatjes", "amount": "2 stuks"}, {"name": "Parmezaanse kaas", "amount": "10 gram"}, {"name": "Rucola", "amount": "Handje"}, {"name": "Zout", "amount": "Naar smaak"}], "steps": ["Verdeel de zuivelspread over de tortilla. Rasp de parmezaanse kaas hierover.", "Maak in het midden een lijn met de volgende ingrediënten: peperrosbief, rucola, cherrytomaatjes en een snufje zout.", "Rol hem op en snijd in stukkies.", "ENJOY! Tip: Doe alles in een bakkie en neem mee naar je werk! Liever vega? Plakjes van rode biet is ook lekker! Een soort ‘bieten carpaccio’."], "page": 15}, {"id": 28, "name": "Broodje gerookte kipsalade", "book": 3, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Gerookte kipfilet", "amount": "50 gram"}, {"name": "Zero fritessaus", "amount": "1 el"}, {"name": "Magere franse kwark", "amount": "1 el"}, {"name": "Bieslook", "amount": "5 sprieten"}, {"name": "Parmezaanse kaas", "amount": "10 gram"}, {"name": "Bosui", "amount": "Naar smaak"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Rooster de boterham.", "Snijd de bosui, bieslook en kipfilet in blokjes. Rasp de parmezaanse kaas.", "Meng in een bakje de fritessaus, kwark, bieslook, kipfilet en parmezaanse kaas.", "Verdeel het mengsel op de boterham en maak af met bosui en flink wat peper en zout.", "ENJOY! Tip: Doe de gerookte kipsalade in een bakkie en neem mee naar je werk! Vega: Kip stuckjes van de Vegatarische Slager! Het heet ook echt kip stuckjes met de c. Of: Quorn Vegan smoky ham free slices."], "page": 16}, {"id": 29, "name": "Scrambled eggs", "book": 3, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Ei", "amount": "2 stuks"}, {"name": "Milner komijnekaas 30+ Halve plak", "amount": "Zero fritessaus"}, {"name": "1 tl Witte ui", "amount": "Kwartje"}, {"name": "Bosui", "amount": "Naar smaak"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Rooster de boterham.", "Snijd de ui en bosui fijn.", "Verhit een koekenpan met een klein scheutje olie. Gooi hier de eieren in en versnipper meteen de kaas hierdoor.", "Voeg het uitje ook toe in de pan.", "Roer alles door in de pan tot het scrambled is.", "Zodra de eieren gaar zijn doe je in de pan de theelepel fritessaus erdoor zodat het wat smeuïger wordt.", "Doe alles op je boterham en maak af met de bosui en flink wat peper en zout.", "ENJOY! Volkoren boterham 1 stuk Ei 2 stuks Milner komijnekaas 30+ Halve plak Zero fritessaus 1 tl Witte ui Kwartje Bosui Naar smaak Peper & zout Naar smaak"], "page": 17}, {"id": 30, "name": "Broodje komijnekaas", "book": 3, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Milner komijnekaas 30+", "amount": "1 plak"}, {"name": "Komkommer", "amount": "2 plakken"}, {"name": "Rucola", "amount": "Handje"}], "steps": ["Rooster de boterham", "Beleg met de rucola, komijnekaas en komkommer.", "ENJOY!"], "page": 18}, {"id": 31, "name": "Zoete aardappel stamppot", "book": 3, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Zoete aardappel", "amount": "600 gram"}, {"name": "Andijvie", "amount": "250 gram"}, {"name": "Mosterd", "amount": "2 el"}, {"name": "Kookroom light", "amount": "2 el"}, {"name": "Magere spekblokjes", "amount": "125 gram"}, {"name": "Nootmuskaat", "amount": "1/2 tl"}, {"name": "Peper & zout", "amount": "Naar smaak"}, {"name": "Vega: Spekreepjes van Vivera. ", "amount": ""}], "steps": ["Schil de zoete aardappels en kook deze 20 minuten in een soeppan met de deksel op de pan.", "Tijd voor een dansje.", "Als de zoete aardappels ongeveer 10 minuten koken kun je in een koekenpan de spekjes aanbakken, ook voor ongeveer 10 minuten. Zo knapperig als je ze zelf wilt. Doe geen olie in de pan!", "Giet de zoete aardappels af en stamp ze alvast met een beetje kookvocht.", "Voeg de nootmuskaat, kookroom, mosterd, andijvie en peper & zout toe.", "Stamp alles goed tot het een stamppotje is. Voeg de spekjes toe en hussel het nog even door.", "Serveer alles op een bordje.", "ENJOY! Zoete aardappel 600 gram Andijvie 250 gram Mosterd 2 el Kookroom light 2 el Magere spekblokjes 125 gram Nootmuskaat 1/2 tl Peper & zout Naar smaak Vega: Spekreepjes van Vivera."], "page": 20}, {"id": 32, "name": "Ossenhaas in champignonroomsaus", "book": 3, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Zilvervlies rijst", "amount": "100 gram (ongekookt)"}, {"name": "Ossenhaas", "amount": "300 gram"}, {"name": "Kookroom light", "amount": "100 ml"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Rode ui", "amount": "1 stuk"}, {"name": "Champignons", "amount": "400 gram"}, {"name": "Peterselie", "amount": "1 el (versneden)"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Kook de rijst volgens de verpakking.", "Snijd de ui in kleine blokjes en snijd de peterselie fijn.", "Verhit een scheutje olie in een wokpan en pers 1 teentje knoflook in de olie, voeg de ui en champignons toe. Wok deze ongeveer 3 minuutjes op hoog vuur.", "Voeg vervolgens de kookroom toe en laat het even wat indikken. Voeg de peterselie toe en de peper en zout.", "Verhit ondertussen een scheutje olie in een andere wokpan, pers 1 teentje knoflook in de olie en schroei de ossenhaas op hoog vuur dicht. Bak hem zolang je zelf wilt. Ik vind hem medium rare het lekkerst.", "Giet de rijst af en gooi deze bij het champignonroomsausje.", "Serveer de ossenhaas en de rijst met de champignonroomsaus op een bordje.", "ENJOY! Tip: Druk de top van je middelvinger tegen je duim van dezelfde hand. Druk op het ‘vlezige’ stukje tussen je duim en wijsvinger, voelt je ossenhaasje ook zo? Dan is hij medium rare Vega: Lastig want ossenhaas is heel laag in vet en vega producten bijna niet. Ik zou de champignonroomsaus lekker door de rijst mixen samen met wat peulvruchten en afmaken met een handje onbehandelde cashewnoten! Er bestaat een vega biefstuk van Vivera maar die bevat 12,7 gram vet per 100 gram, een ossenhaasje bevat daartegenover 2,3 gram vet per 100 gram. Zelf weten uiteraard maar wel te hoog in vetten voor mijn e-book."], "page": 21}, {"id": 33, "name": "Tortizza pulled chicken", "book": 3, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Volkoren tortilla (grote)", "amount": "2 stuks"}, {"name": "Gezeefde tomaten", "amount": "150 gram"}, {"name": "Rode ui", "amount": "halve"}, {"name": "Paprika", "amount": "halve"}, {"name": "Kipfilet", "amount": "300 gram"}, {"name": "Crispy chicken kruiden (Santa Maria)", "amount": "half zakje"}, {"name": "30+ kaas geraspt", "amount": "50 gram"}], "steps": ["Verwarm de oven voor op 200ºC", "Kook de kipfilet 15 tot 20 minuten.", "Snijd de rode ui in ringen en de paprika in reepjes.", "Beleg de tortilla’s met de gezeefde tomatensaus, 30+ kaas, rode ui en paprika.", "Als de kip klaar is pluk je deze met 2 vorken uit elkaar, zo krijg je pulled chicken.", "Voeg het halve zakje van de cripsy chicken kruiden toe aan de kip.", "Schuif de tortilla’s voor 10 min in de oven.", "ENJOY! Vega: Kip stuckjes van de Vegatarische Slager. Of: Jackfruit. Jackfruit is helemaal plantaardig en kun je dus ook als pulled jackfruit maken."], "page": 22}, {"id": 34, "name": "Truffelrisotto", "book": 3, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Risotto met truffel", "amount": "175 gram"}, {"name": "Paddenstoelen mix", "amount": "280 gram"}, {"name": "Parmezaanse kaas", "amount": "40 gram"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Bio Today bouillon", "amount": "1 tl"}, {"name": "Rucola", "amount": "Handje"}, {"name": "Water", "amount": "750 ml"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Vul een maatbeker met 750 ml water en mix de theelepel bouillon hierin.", "Kook de risottorijst zoals op de verpakking is beschreven (zonder de wijn natuurlijk).", "Doe een scheutje olie in een wokpan en pers de knoflook hierin uit. Roerbak hierin de paddenstoelen zoals jij de bite het lekkerst vindt.", "Voeg de risottorijst bij de paddenstoelen en rasp de parmezaanse kaas er doorheen. Maak op smaak met de peper en zout.", "Houd een klein beetje parmezaanse kaas over als garnering.", "Verdeel alles op de bordjes en maak af met de rucola en parmezaanse kaas.", "ENJOY! Tip: Als extra groente zijn groene aspergetips echt mega lekker hierbij!"], "page": 23}, {"id": 35, "name": "Baked cheesy pasta", "book": 3, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Kipfilet", "amount": "300 gram"}, {"name": "Volkoren penne", "amount": "150 gram"}, {"name": "Magere melk", "amount": "200 ml"}, {"name": "30+geraspte belegen kaas", "amount": "50 gram"}, {"name": "Courgette", "amount": "1 stuk"}, {"name": "Cherry tomaatjes", "amount": "1 bakje"}, {"name": "Volkoren speltmeel", "amount": "15 gram"}, {"name": "Parmezaanse kaas", "amount": "15 gram"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Cajun kruiden", "amount": "Naar smaak"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Snijd de kipfilet in blokjes en bestrooi deze met de cajun kruiden en de peper en zout.", "Verhit een scheutje olie in een wokpan en pers 1 teentje knoflook hierin uit. Bak de kipfilet gaar.", "Was en snijd de courgette in blokkies en gooi deze samen met de cherry tomaatjes bij de kipfilet.", "Doe in een steelpannetje de melk, 30+ kaas, volkoren speltmeel en het andere teentje knoflook. Laat dit op middelvuur indikken tot een sausje.", "Kook ondertussen de penne zoals is beschreven op de verpakking.", "Doe alles in een ovenschaal, gooi de saus als laatste eroverheen.", "Maak af met wat parmezaanse kaas on top.", "Doe hem 10 minuutjes in de oven op 200ºC.", "ENJOY! Vega: Kip stuckjes van de Vegatarische slager."], "page": 24}, {"id": 36, "name": "Zalm teriyaki", "book": 3, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Volkoren noodles", "amount": "100 gram"}, {"name": "Zalmfilet", "amount": "300 gram"}, {"name": "Honing", "amount": "2 el"}, {"name": "Sojasaus (groene dop)", "amount": "40 ml"}, {"name": "groene aspergetips", "amount": "200 gram"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Chilipoeder", "amount": "1/4 tl"}, {"name": "Gemberpoeder", "amount": "1/4 tl"}, {"name": "Sesamzaadjes", "amount": "1 tl"}, {"name": "Peper & Zout", "amount": "Naar smaak"}], "steps": ["Verhit de oven voor op 200ºC.", "Doe de sojasaus, honing, gemberpoeder, chilipoeder en knoflook in een bakje. Roer dit even goed door en zet weg.", "Doe de zalm en groene aspergetips in een grote ovenschaal. Doe de dressing over de zalm heen.", "Bestrooi de sesamzaadjes over de zalm en maak op smaak met wat peper en zout.", "Bak de zalm en asperges 15 minuutjes in de oven gaar.", "Kook ondertussen de noodles volgens de verpakking.", "Serveer alles op een bordje en giet de dressing die is overgebleven in de ovenschaal nog extra over de borden heen, maak af met peper en zout.", "ENJOY! Vega: Vegan rul stukjes van Albert Heijn huismerk zijn goed! Lekker om zo door de noodles heen te roeren, verder kun je het ‘sausje’ gewoon zo laten. Wil je in de vis vibe blijven? Voeg dan zeewier, soja bonen en edamame toe en laat de zalm weg!"], "page": 25}, {"id": 37, "name": "Kipsalon", "book": 3, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Zoete aardappel friet (verse!)", "amount": "400 gram"}, {"name": "Magere franse kwark", "amount": "200 gram"}, {"name": "Kipfilet blokjes", "amount": "300 gram"}, {"name": "30 + geraspte kaas", "amount": "30 gram"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Ijsbergsla", "amount": "Handje"}, {"name": "Cherrytomaatjes", "amount": "10 stuks"}, {"name": "Komkommer", "amount": "Halve"}, {"name": "Witte ui", "amount": "Halve"}, {"name": "Oregano", "amount": "1 tl"}, {"name": "Shoarma kruiden Half zakje", "amount": "Peper & zout"}, {"name": "Naar smaak ", "amount": ""}], "steps": ["Verwarm de oven voor op 200ºC", "Doe een klein scheutje olijfolie over de zoete aardappelfriet en doe ze 10 min in de airfryer of 17 minuten in de oven. Draai ze op de helft even om.", "Bak de kipfilet in een wokpan en bestrooi met wat peper en zout en een half zakje shoarmakruiden. Ik gebruik het zakje van Verstegen.", "Halveer ondertussen de cherrytomaatjes, snijd de ui en komkommer in blokjes.", "Meng in een bakje de kwark met oregano, wat peper en zout en pers het teentje knoflook hierbij.", "Doe de zoete aardappelfriet, kip en geraspte kaas in een ovenschotel en plaats ongeveer 5 minuutjes in de oven zodat de kaas smelt.", "Zodra de ovenschotel uit de oven is bestrooi je deze met de komkommer, tomaat, ui en ijsbergsla. Maak af met de zelfgemaakte knoflooksaus.", "ENJOY! Vega: Kip stuckjes van de Vegatarische slager.Vegan rul gehakt is ook heel lekker in deze kipsalon!"], "page": 26}, {"id": 38, "name": "Pastasalade", "book": 3, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Volkoren penne", "amount": "150 gram"}, {"name": "Gerookte kipfilet reepjes", "amount": "250 gram"}, {"name": "Hüttenkäse", "amount": "100 gram"}, {"name": "Avocado", "amount": "Halve"}, {"name": "Knoflook Teentje", "amount": "Rode ui"}, {"name": "Halve Citroensap", "amount": "4/5"}, {"name": "Pompoenpitten", "amount": "20 gram"}, {"name": "Rucola", "amount": "Handje"}, {"name": "Cherrytomaatjes", "amount": "10 stuks"}, {"name": "Peper & zout Vrij veel", "amount": ""}], "steps": ["Kook de penne volgens de verpakking.", "Doe in een hoge mengbeker of keukenmachine de hüttenkäse, halve avocado, citroensap, knoflook en een scheutje warm water. Pureer dit tot een saus.", "Doe de pasta in een grote schaal, gooi de saus hierdoor heen en roer het goed door. Voeg flink wat peper en zout toe.", "Halveer de cherrytomaatjes en snijd de rode ui fijn en roer deze door de pasta samen met de rucola en gerookte kipfilet.", "Verdeel alles over de bordjes en maak af met de pompoenpitten en evt nog een handje rucola.", "ENJOY!"], "page": 27}, {"id": 39, "name": "Bananenbrood (tussendoortje)", "book": 3, "meal_type": "diner", "portions": "1", "ingredients": [{"name": "Banaan", "amount": "2 stuks"}, {"name": "Ei", "amount": "2 stuks"}, {"name": "Bakpoeder", "amount": "2 tl"}, {"name": "Honing", "amount": "2 el"}, {"name": "Blauwe bessen", "amount": "100 gram"}, {"name": "Volkoren speltmeel", "amount": "150 gram"}], "steps": ["Verwarm de oven voor op 170ºC", "Doe alle ingrediënten behalve de blauwe bessen in de blender.", "Vet een cakevorm in met een klein beetje olie, gebruik een bakkwast zodat je niet veel olie hoeft te gebruiken.", "Doe het beslag in de cakevorm. Roer de blauwe bessen hier doorheen.", "Bak het bananenbrood 55 minuten, laat hem zeker een uur afkoelen.", "Snijd in 8 stukken.", "ENJOY!"], "page": 29}, {"id": 40, "name": "Wentelteefjes", "book": 4, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Ei", "amount": "1 stuk"}, {"name": "Magere melk", "amount": "25 ml"}, {"name": "Magere franse kwark", "amount": "100 gram"}, {"name": "Kaneel", "amount": "2 tl"}, {"name": "Blauwe bessen", "amount": "Handje"}], "steps": ["Meng het ei, de havermelk en één theelepel kaneel in een kommetje.", "Snijd de boterham in zes gelijke stukken.", "Verhit een koekenpan met een beetje olijfolie, dip de stukjes brood in het eimengsel en leg ze in de pan.", "Bak ze aan beide kanten bruin.", "Meng ondertussen de kwark met de laatste theelepel kaneel in een klein kommetje, dit is je dipsaus!", "Leg de wentelteefjes op een bordje, strooi hier het handje blauwe bessen over en dippen maar.", "ENJOY! Als je de dipsaus wat zoeter wilt, kan je nog twee drupjes Stevia toevoegen!"], "page": 6}, {"id": 41, "name": "Appeltaartje", "book": 4, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Ei", "amount": "1 stuk"}, {"name": "Grof volkoren havervlokken", "amount": "35 gram"}, {"name": "Magere melk", "amount": "50 ml"}, {"name": "Appel", "amount": "50 gram"}, {"name": "Honing", "amount": "1 el"}, {"name": "Bakpoeder", "amount": "1 tl"}, {"name": "Kaneel", "amount": "1 tl"}], "steps": ["Verwarm de oven voor op 170°C.", "Doe alle ingrediënten behalve de appel in de blender, dit wordt je beslag.", "Snijd de appel in blokjes.", "Giet het beslag in een ovenschaaltje en voeg de blokjes appel toe.", "Bak het appeltaartje in 25 minuutjes gaar.", "ENJOY! Ei 1 stuk Grof volkoren havervlokken 35 gram Magere melk 50 ml Appel 50 gram Honing 1 el Bakpoeder 1 tl Kaneel 1 tl"], "page": 7}, {"id": 42, "name": "Ontbijttaart", "book": 4, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Ei (alleen het eiwit)", "amount": "1 stuk"}, {"name": "Grof volkoren havervlokken", "amount": "60 gram"}, {"name": "Banaan", "amount": "1 stuk"}, {"name": "Magere franse kwark", "amount": "100 gram"}, {"name": "Blauwe bessen", "amount": "Grote hand"}, {"name": "Bakpoeder", "amount": "1 tl"}, {"name": "Honing", "amount": "1 tl"}, {"name": "Speculaas-koekkruiden", "amount": "1 tl"}], "steps": ["Verwarm de oven voor op 170°C.", "Doe de banaan, havermout, speculaas-koekkruiden, bakpoeder en alleen het eiwit in een keukenmachine. Mix tot een glad geheel.", "Verdeel het mengsel over een bakpapiertje. Het klopt dat het wat dunner is.", "Bak deze bodem 25 minuutjes tot hij goudbruin is.", "Laat de bodem een paar minuutjes afkoelen.", "Verdeel de kwark over de bodem en maak af met het rode fruit en de theelepel honing.", "ENJOY! Je mag elk soort rood fruit gebruiken die je voorkeur heeft."], "page": 8}, {"id": 43, "name": "Fram-bo", "book": 4, "meal_type": "diner", "portions": "1", "ingredients": [{"name": "Frambozen", "amount": "50 gram"}, {"name": "Magere franse kwark", "amount": "200 gram"}, {"name": "Onbehandelde pecannoten", "amount": "15 gram"}, {"name": "Lijnzaad", "amount": "1 tl"}], "steps": ["Verwarm 3/4 van de frambozen in een pannetje, prak ze fijn tot een smeuïg geheel. Het wordt een soort jam.", "Doe de frambozenjam in een kommetje en voeg het lijnzaad hierbij.", "Breek de pecannoten klein en doe die ook bij de frambozenjam.", "Doe een laagje kwark in een glas en vervolgens een laagje jam. Doe dit tot het op is.", "Maak af met de overgebleven frambozen.", "Enjoy!"], "page": 9}, {"id": 44, "name": "Groen goedje", "book": 4, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Magere franse kwark", "amount": "200 gram"}, {"name": "Ananas", "amount": "100 gram"}, {"name": "Bevroren mango", "amount": "120 gram"}, {"name": "Grof volkoren havervlokken", "amount": "30 gram"}, {"name": "Spinazie", "amount": "Grote hand"}, {"name": "Lijnzaad", "amount": "1 el"}], "steps": ["Mix alles in de blender.", "Enjoy! Perfect voor de ontbijter die altijd haast heeft ’s morgens!"], "page": 10}, {"id": 45, "name": "Clubsandwich", "book": 4, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "2 stuks"}, {"name": "Ei", "amount": "1 stuk"}, {"name": "Gerookte kipfilet", "amount": "3 plakken"}, {"name": "Mister kitchen veggie spread chili paprika", "amount": "1 tl"}, {"name": "Zero fritessaus", "amount": "1 tl"}, {"name": "Komkommer", "amount": "4 plakken"}, {"name": "Tomaat", "amount": "4 plakken"}, {"name": "Alfalfa", "amount": "Handje"}, {"name": "Peper & zout", "amount": "Naar smaak"}, {"name": "Liever vega? Gebruik de Quorn Vegan chicken free slices. ", "amount": ""}], "steps": ["Kook het eitje zeven minuten.", "Rooster de twee boterhammen (niet geroosterd kan ook).", "Mix de veggiespread met de zero fritessaus, smeer deze op één boterham.", "Beleg dezelfde boterham met alle ingrediënten en doe de andere boterham daar bovenop.", "Snijd het door de midden.", "ENJOY! Volkoren boterham 2 stuks Ei 1 stuk Gerookte kipfilet 3 plakken Mister kitchen veggie spread chili paprika 1 tl Zero fritessaus 1 tl Komkommer 4 plakken Tomaat 4 plakken Alfalfa Handje Peper & zout Naar smaak Liever vega? Gebruik de Quorn Vegan chicken free slices."], "page": 12}, {"id": 46, "name": "Soepie", "book": 4, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Rode paprika", "amount": "2 stuks"}, {"name": "Tomaat", "amount": "2 stuks"}, {"name": "Rode ui", "amount": "1 stuk"}, {"name": "Knoflook", "amount": "1 stuk"}, {"name": "Bio Today groentebouillon", "amount": "1 tl"}, {"name": "Zuivelspread bieslook light", "amount": "30 gram"}, {"name": "Water", "amount": "300 ml"}, {"name": "Pompoenpitten", "amount": "15 gram"}, {"name": "Bieslook", "amount": "2 sprieten"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Verwarm de oven voor op 180°C.", "Doe de paprika’s twintig minuten in de oven.", "Snijd de tomaten, ui en knoflook in grove stukken.", "Verhit een scheutje olijfolie in een soeppan.", "Fruit de ui en knoflook ongeveer drie minuutjes, voeg daarna het water, de bouillon en de tomaten toe. Breng tien minuutjes aan de kook.", "Haal de paprika’s uit de oven en snijd de schil van de paprika. De schilletjes kunnen in de prullenbak.", "Gooi de paprika’s in de pan.", "Mix alles met een staafmixer tot een glad soepje.", "Giet de soep in een kom en maak af met de bieslook, zuivelspread, pompoenpitten en breng op smaak met de peper en zout.", "ENJOY!"], "page": 13}, {"id": 47, "name": "Broodje ham", "book": 4, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Gerookte slagersachterham", "amount": "1 plak"}, {"name": "Komkommer", "amount": "4 plakken"}, {"name": "Tomaat", "amount": "4 plakken"}, {"name": "Rucola", "amount": "Handje"}, {"name": "Alfalfa", "amount": "Handje"}, {"name": "Zuivelspread bieslook light", "amount": "10 gram"}, {"name": "Peper & zout", "amount": "Naar smaak"}, {"name": "Liever vega? Gebruik de Quorn Vegan smoky ham free slices. ", "amount": ""}], "steps": ["Besmeer de boterham met de zuivelspread.", "Leg de alfalfa, tomaat, komkommer, rucola en ham er bovenop.", "Maak af met peper en zout.", "ENJOY! Volkoren boterham 1 stuk Gerookte slagersachterham 1 plak Komkommer 4 plakken Tomaat 4 plakken Rucola Handje Alfalfa Handje Zuivelspread bieslook light 10 gram Peper & zout Naar smaak Liever vega? Gebruik de Quorn Vegan smoky ham free slices."], "page": 14}, {"id": 48, "name": "Salade gerookte kip", "book": 4, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Gerookte kipfilet reepjes", "amount": "150 gram"}, {"name": "Rucola slamelange", "amount": "75 gram"}, {"name": "Honing mosterd dressing 0% suiker (Remia)", "amount": "15 ml"}, {"name": "Augurk", "amount": "2 stuks"}, {"name": "Rode ui", "amount": "Halve"}, {"name": "Alfalfa", "amount": "Handje"}, {"name": "Appel", "amount": "Halve"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Snijd de appel, rode ui en augurken in kleine blokjes.", "Doe vervolgens alle ingrediënten in een schaal.", "Breng op smaak met peper en zout.", "ENJOY! Makkelijk mee te nemen! Liever vega? Gebruik de Quorn Vegan chicken free slices, neem dezelfde hoeveelheid en snijd deze in plakjes."], "page": 15}, {"id": 49, "name": "Hummus wrap", "book": 4, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren wrap groot", "amount": "1 stuk"}, {"name": "Klassieke hummus", "amount": "30 gram"}, {"name": "Gerookte kipfilet reepjes", "amount": "75 gram"}, {"name": "Citroensap", "amount": "5 druppels"}, {"name": "Hüttenkäse", "amount": "40 gram"}, {"name": "Tomaat", "amount": "4 plakken"}, {"name": "Komkommer", "amount": "4 plakken"}, {"name": "Rucola Een handje", "amount": "Peper & zout"}, {"name": "Naar wens ", "amount": ""}], "steps": ["Mix de hummus, huttenkäse, citroensap en peper en zout met elkaar.", "Maak in het midden van de tortilla een lijn van het hummusmengsel, beleg de tortilla vervolgens met de rest van de ingrediënten.", "Breng op smaak met peper en zout en rol het op.", "ENJOY! Liever vega? Gebruik de Quorn Vegan chicken free slices, neem dezelfde hoeveelheid en snijd deze in plakjes."], "page": 16}, {"id": 50, "name": "Broodje falafel", "book": 4, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Falafel naturel", "amount": "70 gram"}, {"name": "Parmezaanse kaas", "amount": "10 gram"}, {"name": "Magere franse kwark", "amount": "100 gram"}, {"name": "Komkommer", "amount": "5 plakken"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Blauwe bessen", "amount": "1 handje"}, {"name": "Peper & Zout", "amount": "Naar smaak"}], "steps": ["Rooster de boterham", "Verhit een scheutje olijfolie in een wokpan en wok de falafel zodat ze iets knapperiger worden.", "Rasp de komkommer en parmezaanse kaas. Pers de knoflook.", "Meng in een bakje de kwark, komkommer, knoflook, parmezaanse kaas en de peper en zout.", "Smeer het kwarkmengsel op de geroosterde boterham.", "Doe de falafel daar bovenop.", "Maak af met de blauwe bessen.", "ENJOY! Pak de falafel van Jumbo huismerk. Deze voedingswaardes vond ik het beste. Anders van Gourmet Garden."], "page": 17}, {"id": 51, "name": "Tortillacake", "book": 4, "meal_type": "lunch", "portions": "2", "ingredients": [{"name": "Extra mager rundergehakt", "amount": "300 gram"}, {"name": "Volkoren tortilla (grote)", "amount": "2 stuks"}, {"name": "Mexicaanse groente", "amount": "400 gram"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Rode ui", "amount": "1 stuk"}, {"name": "30+ kaas geraspt", "amount": "30 gram"}, {"name": "Crème fraîche light", "amount": "80 gram"}, {"name": "Mexicaanse kruiden", "amount": "3 tl"}, {"name": "Liever vega? Gebruik de vegan rul stukjes van AH huismerk. ", "amount": ""}], "steps": ["Verwarm de oven voor op 200°C", "Snijd de ui in ringen.", "Verhit een scheutje olie in een wokpan en pers de knoflook. Doe het gehakt, de knoflook en ui ook in de wokpan.", "Als het gehakt gaar is, voeg je de Mexicaanse groente en kruiden ook toe.", "Leg de tortilla’s in het cakeblik en doe het gehaktmengsel hierbij.", "Doe de crème fraîche light en kaas boven op, verspreid dit een beetje over het cakeblik.", "Zet de tortillacake tien minuutjes in de oven.", "ENJOY! Extra mager rundergehakt 300 gram Volkoren tortilla (grote) 2 stuks Mexicaanse groente 400 gram Knoflook 2 teentjes Rode ui 1 stuk 30+ kaas geraspt 30 gram Crème fraîche light 80 gram Mexicaanse kruiden 3 tl Liever vega? Gebruik de vegan rul stukjes van AH huismerk."], "page": 19}, {"id": 52, "name": "Spaghetti bolognese", "book": 4, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Extra mager rundergehakt", "amount": "300 gram"}, {"name": "Volkoren spaghetti", "amount": "120 gram"}, {"name": "(ongekookt) Soepgroente", "amount": "250 gram"}, {"name": "Tomatenblokjes naturel", "amount": "300 gram"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Witte ui", "amount": "1 stuk"}, {"name": "30+ kaas geraspt", "amount": "30 gram"}, {"name": "Basilicum", "amount": "Handje"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Kook de spaghetti volgens de verpakking.", "Snijd de ui en basilicum fijn.", "Verhit een scheutje olijfolie in een wokpan en pers de knoflook. Voeg dit toe in de wokpan.", "Doe het gehakt, de soepgroente, tomatenblokjes en de ui in de pan.", "Bak het gehaktmengsel tot het gaar is en doe dan de basilicum erbij.", "Doe de spaghetti ook hierbij.", "Verdeel over twee borden en maak af met wat peper en zout en de 30+ kaas.", "ENJOY! Liever vega? Gebruik de vegan rul stukjes van AH huismerk."], "page": 20}, {"id": 53, "name": "Pompoenlasagne", "book": 4, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Lasagnebladen pompoen", "amount": "250 gram"}, {"name": "Tomatenblokjes", "amount": "400 gram"}, {"name": "Italiaanse roerbakgroente", "amount": "300 gram"}, {"name": "Parmezaanse kaas", "amount": "80 gram"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Oregano", "amount": "4 tl"}, {"name": "Italiaanse kruiden", "amount": "2 tl"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Verwarm de oven voor op 180°C.", "Verhit een scheutje olijfolie in een wokpan en pers de knoflook. Voeg de roerbakgroente, knoflook, tomatenblokjes en de kruiden toe.", "Bak vijf minuutjes op hoog vuur en zet dan het vuur wat lager. Voeg de helft van de parmezaanse kaas toe.", "Leg een laagje pompoenbladen in een ovenschotel, plaats daar bovenop het groentemengsel en daar bovenop wat parmezaanse kaas. Herhaal dit tot alle ingrediënten op zijn.", "Zet de pompoenlasagne 25 minuutjes in de oven.", "ENJOY!"], "page": 21}, {"id": 54, "name": "Oosterse pangasiusfilet met rijst", "book": 4, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Zilvervliesrijst", "amount": "100 gram"}, {"name": "(ongekookt) Pangasiusfilet", "amount": "300 gram"}, {"name": "Paksoi", "amount": "300 gram"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Onbehandelde cashewnoten", "amount": "50 gram"}, {"name": "Bosui", "amount": "3 stengels"}, {"name": "Ketjap manis", "amount": "2 el"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Kook de rijst volgens de verpakking.", "Snijd de pangasiusfilet in blokjes en doe dit in een bakje.", "Pers de knoflook in hetzelfde bakje en doe de ketjap manis en peper en zout hierbij.", "Snijd de paksoi in stukjes van 3 à 4 cm.", "Wok de pangasiusfilet in een scheutje olijfolie en doe na vier minuutjes de paksoi erbij. Wok tot de vis gaar is.", "Snijd de bosui en hak de cashewnoten fijn.", "Doe alles bij elkaar en maak af met de bosui en cashewnoten.", "ENJOY! Liever vega? Voeg zeewier, edamame en sojabonen toe en laat de vis weg. Je hebt ook visvrije tonijn in blik van Sea SoGood. Deze kan je ook gebruiken. Mocht dit je niet aanstaan, dan kan je ook de vegan rulstukjes pakken :)."], "page": 22}, {"id": 55, "name": "Gevuld kippetje", "book": 4, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Kipfilet", "amount": "300 gram (2 stuks)"}, {"name": "Zoete aardappel", "amount": "200 gram"}, {"name": "Rode paprika", "amount": "1 stuk"}, {"name": "Rode ui", "amount": "Halve"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Feta kaas", "amount": "80 gram"}, {"name": "Italiaanse kruiden", "amount": "2 tl"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Verwarm de oven voor op 185°C.", "Snijd de kipfilets zes keer in, dus niet helemaal door.", "Vet een ovenschaal in met wat olijfolie en leg de kipfilets daarin.", "Pers de knoflook en verdeel deze over de kipfilets.", "Snijd de rode ui, paprika en zoete aardappel in kleine stukjes.", "Doe de groente rauw in de kipfilets en druppel nog een klein beetje olijfolie hierover.", "Brokkel de feta over de kippetjes en maak af met de Italiaanse kruiden.", "Doe de kipfilets  dertig minuten in de oven.", "ENJOY! Liever vega? Draai de ingrediënten dan om, vul een zoete aardappel met stukjes kip van de Vegetarische slager. Pak dan twee zoete aardappels en ongeveer 200 gram kipstukjes om de zoete aardappel te vullen. Let op: Niet alle groente gaan passen in de kip, doe de overige groente in de ovenschaal zodat je wel genoeg groente binnenkrijgt."], "page": 23}, {"id": 56, "name": "Fluffy rijstbowl", "book": 4, "meal_type": "ontbijt", "portions": "2", "ingredients": [{"name": "Zilvervliesrijst", "amount": "100 gram"}, {"name": "(ongekookt) Kipfilet", "amount": "300 gram"}, {"name": "Tomaat", "amount": "4 stuks"}, {"name": "Rode paprika", "amount": "1 stuk"}, {"name": "Avocado", "amount": "1 stuk"}, {"name": "Rode ui", "amount": "Halve"}, {"name": "Feta kaas", "amount": "60 gram"}, {"name": "Zonnebloempitten", "amount": "2 tl"}, {"name": "Mexicaanse kruiden", "amount": "2 tl"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Kook de zilvervliesrijst volgens de verpakking.", "Kook de kip in zijn geheel twintig minuten.", "Snijd de tomaten, avocado, ui en paprika in kleine blokjes.", "Zodra de kip gaar is, trek je deze met twee vorken uit elkaar. Zo krijg je pulled chicken. Doe de Mexicaanse kruiden over de pulled chicken.", "Doe de rijst en kip in één pan. Doe de paprika, tomaat, ui en feta hierbij. Roer het even goed door, zodat het wat smeuïg wordt.", "Verdeel alles over twee bordjes.", "Maak de bordjes af met de avocado, zonnebloempitjes en peper en zout.", "ENJOY! Liever vega? Gebruik de kipstukjes van de Vegetarische slager of gebruik jackfruit. Jackfruit is plantaardig en kan je ook als pulled jackfruit eten!"], "page": 24}, {"id": 57, "name": "Penna tuna", "book": 4, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Volkoren penne", "amount": "150 gram"}, {"name": "(ongekookt) Tonijn op waterbasis", "amount": "2 blikjes"}, {"name": "Italiaanse wokgroente", "amount": "400 gram"}, {"name": "Tomaten pastasaus classic", "amount": "200 ml"}, {"name": "Gesneden zwarte olijven", "amount": "15 stuks"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Tomatenpuree", "amount": "2 tl"}, {"name": "Kappertjes", "amount": "3 tl"}, {"name": "Parmezaanse kaas", "amount": "40 gram"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Kook de penne volgens de verpakking.", "Laat de tonijn uitlekken.", "Snijd de olijven in kleine blokjes.", "Verhit een schuitje olijfolie in een wokpan en pers de knoflook. Voeg de knoflook toe in de wokpan.", "Doe de tomatenpuree en wokgroente in de pan en wok vijf minuutjes op hoog vuur.", "Doe dan de tomatensaus en tonijn erbij en roer even goed door tot alles warm is, maak op smaak met peper en zout.", "Doe vervolgens de penne bij de saus en tonijn en verdeel de pasta over twee borden.", "Maak af met de kappertjes, olijven en parmezaanse kaas.", "ENJOY! Liever vega? Neem de visvrije tonijn uit blik van Sea SoGood."], "page": 25}, {"id": 58, "name": "Carpaccio pastasalade", "book": 4, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Volkoren fusilli", "amount": "150 gram"}, {"name": "(ongekookt) Carpaccio (alleen het vlees)", "amount": "120 gram"}, {"name": "Onbehandelde pistache noten", "amount": "40 gram"}, {"name": "Parmezaanse kaas", "amount": "40 gram"}, {"name": "Hüttenkäse", "amount": "100 gram"}, {"name": "Mutti pesto", "amount": "25 gram"}, {"name": "Rucola", "amount": "40 gram"}, {"name": "Peper & zout", "amount": "Naar smaak"}, {"name": "Liever vega? Maak de carpaccio van plakjes rode biet. ", "amount": ""}], "steps": ["Kook de fusilli volgens de verpakking.", "Meng in een kommetje de hüttenkäse en pesto.", "Meng vervolgens het pestomengsel met de fusilli.", "Verdeel de fusilli over twee borden en bouw vervolgens de salade op met: laagje carpaccio, rucola, parmezaanse kaas, pistache noten en peper en zout.", "ENJOY! Volkoren fusilli 150 gram (ongekookt) Carpaccio (alleen het vlees) 120 gram Onbehandelde pistache noten 40 gram Parmezaanse kaas 40 gram Hüttenkäse 100 gram Mutti pesto 25 gram Rucola 40 gram Peper & zout Naar smaak Liever vega? Maak de carpaccio van plakjes rode biet."], "page": 26}, {"id": 59, "name": "Meloen maantjes", "book": 5, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Galia meloen", "amount": "1 stuk"}, {"name": "Blauwe bessen", "amount": "Handje"}, {"name": "Chiazaad", "amount": "1 tl"}, {"name": "Onbehandelde pecannoten", "amount": "20 gram"}, {"name": "Magere franse kwark", "amount": "Zoveel je wil"}, {"name": "Stevia", "amount": "3 druppels"}, {"name": "Kaneel", "amount": "Snufje"}], "steps": ["Snijd de meloen eerst in zeven ronde plakken en snijd die vervolgens doormidden. Verwijder de zaadjes.", "Doe de kwark, de stevia en de kaneel bij elkaar en roer het even door.", "Doe de kwark op de van meloen gemaakte maantjes en maak af met de blauwe bessen en het chiazaad.", "ENJOY!"], "page": 7}, {"id": 60, "name": "Appel-pinda plakjes", "book": 5, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Magere franse kwark", "amount": "200 gram"}, {"name": "Appel", "amount": "1 stuk"}, {"name": "100% pindakaas", "amount": "15 gram"}, {"name": "Onbehandelde amandelen", "amount": "10 gram"}], "steps": ["Was de appel.", "Ontpit de appel met een appelboor. Heb je geen appelboor? Snijd dan de appel tot het klokhuis in dunne plakjes en doe hetzelfde vanaf de andere kant.", "Verdeel de pindakaas over de appelplakjes.", "Snijd de amandelen in stukjes en verdeel over de appelplakjes.", "Doe de kwark erbij. Magere franse kwark 200 gram Appel 1 stuk 100% pindakaas 15 gram Onbehandelde amandelen 10 gram"], "page": 8}, {"id": 61, "name": "Havermoutpap", "book": 5, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Volkoren havermout", "amount": "50 gram"}, {"name": "Havermelk of magere melk", "amount": "150 ml"}, {"name": "Banaan", "amount": "1 stuk"}, {"name": "Raw cacaopoeder", "amount": "13 gram"}, {"name": "Blauwe bessen", "amount": "40 gram"}], "steps": ["Breng de melk aan de kook en voeg de havermout en de cacaopoeder toe. Laat de melk en de havermout al roerend koken tot het steeds dikker wordt. Dit kan even duren.", "Zet het vuur uit en doe de havermoutpap in een kommetje. Laat even vijf minuutjes afkoelen.", "Snijd ondertussen de banaan in plakjes.", "Doe na vijf minuutjes de banaan en de blauwe bessen over de havermoutpap.", "ENJOY! Hoe langer je kookt, hoe dikker de pap wordt. Tip: Probeer eens een eetlepel cacaopoeder door het bananenbrood uit E- book 3!"], "page": 9}, {"id": 62, "name": "Snelste ontbijt ever", "book": 5, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Breaker zonder suiker", "amount": "1 stuk"}, {"name": "Appel of banaan", "amount": "1 stuk"}], "steps": ["Is er uitleg nodig? Hahaha. Oké, ik was niet helemaal van plan om dit ontbijt in mijn E-book te zetten. Omdat ik vind, dat je voor een tientje wel echt leuke recepten moet krijgen. Maar er was zoooo veel vraag naar, dat dit ontbijtje er wel in móest. En: dit ontbijtje mag elke dag, als je zou willen. Beste ‘on the go’ die er is, vind ik en het vult nog ook!"], "page": 10}, {"id": 63, "name": "Overnight pudding", "book": 5, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Havermelk", "amount": "100 ml"}, {"name": "Chiazaad", "amount": "25 gram"}, {"name": "Aardbeien", "amount": "grote hand"}, {"name": "Vanille aroma (Dr Oekter)", "amount": "1 tl"}], "steps": ["Doe de melk, de chiazaad en de vanille aroma in een schaaltje. Roer dit vijf minuutjes door.", "Zet na vijf minuten het mengsel minimaal vier uur in de koelkast. De hele nacht kan dus ook.", "Snijd voor het serveren de aardbeien in dunne plakjes en leg die op de pudding.", "ENJOY! Het is handig om deze een avond van tevoren te maken, scheelt tijd ’s ochtends! Optioneel: extra blauwe besjes."], "page": 11}, {"id": 64, "name": "Mozzarella salade", "book": 5, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Mozzarella light halve bol", "amount": "Cherry tomaatjes"}, {"name": "5 stuks Veldsla", "amount": "40 gram"}, {"name": "Rode ui", "amount": "1/4"}, {"name": "Balsamico", "amount": "2 tl"}, {"name": "Pompoenpitten", "amount": "10 gram"}, {"name": "Peper & zout", "amount": "naar smaak"}, {"name": "Dit gerecht is makkelijk mee te nemen. Wil je de Mozarella salade meenemen? Meng alles dan door elkaar. Je kan", "amount": "de salade al een avond van tevoren maken."}, {"name": "Tip: het is ook lekker om de pompoenpitten te roosteren. Dit kan zonder olie, gewoon in een koekenpan.", "amount": ""}], "steps": ["Doe de veldsla en de halve bol mozzarella op het bord.", "Snijd de tomaten en de rode ui.", "Verdeel de tomaten en de rode ui over het bord en maak af met balsamico, de pompoenpitten en wat peper en zout. Mozzarella light halve bol Cherry tomaatjes 5 stuks Veldsla 40 gram Rode ui 1/4 Balsamico 2 tl Pompoenpitten 10 gram Peper & zout naar smaak Dit gerecht is makkelijk mee te nemen. Wil je de Mozarella salade meenemen? Meng alles dan door elkaar. Je kan de salade al een avond van tevoren maken. Tip: het is ook lekker om de pompoenpitten te roosteren. Dit kan zonder olie, gewoon in een koekenpan."], "page": 13}, {"id": 65, "name": "Romige venkelsoep", "book": 5, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Venkel", "amount": "1 stuk"}, {"name": "Zoete aardappel", "amount": "1 stuk"}, {"name": "Witte ui", "amount": "1 stuk"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Bio Today groentebouillon", "amount": "1 tl"}, {"name": "Feta", "amount": "50 gram"}, {"name": "Water", "amount": "600 ml"}, {"name": "Bosui", "amount": "2 stengels"}, {"name": "Chili poeder halve tl", "amount": "Kurkuma"}, {"name": "1 tl Peper & zout", "amount": "naar smaak"}], "steps": ["Snijd de ui en de knoflook in grote stukken.", "Verhit een scheutje olijfolie in een soeppan en fruit de ui en de knoflook aan.", "Snijd de zoete aardappel en de venkel in blokjes.", "Voeg de bouillon, de groente, de kruiden en het water toe in de pan. Laat het geheel ongeveer vijftien minuutjes koken.", "Snijd ondertussen de bosui alvast in ringen.", "Giet de soep na vijftien minuten over in de blender en blend tot het een romig geheel is.", "Schep de soep in een kom en maak af met feta en bosui.", "ENJOY! De soep kan in de vriezer bewaard worden: laat de feta en de bosui er dan nog even uit!"], "page": 14}, {"id": 66, "name": "Broodje beef", "book": 5, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham of volkoren bol", "amount": "1 stuk"}, {"name": "Ossenhaas", "amount": "100 gram"}, {"name": "Komkommer", "amount": "4 plakken"}, {"name": "Witte ui kwart", "amount": "Ongezouten roomboter"}, {"name": "5 gram Rucola", "amount": "handje"}, {"name": "Zuivelspread bieslook light", "amount": "10 gram"}, {"name": "Peper & zout", "amount": "naar smaak"}, {"name": "Liever vega? Gebruik de Quorn Vegan smoky ham free slices. Je mag ook een biefstukje pakken i.p.v. ossenhaas!", "amount": ""}], "steps": ["Laat de ossenhaas op kamertemperatuur komen.", "Snijd de ui in ringen.", "Verwarm de boter in een koekenpan en bak de uiringen ongeveer vijftien minuten op laag vuur.", "Smeer de zuivelspread op je broodje, doe daar vervolgens de komkommer op.", "Haal de uien uit de pan en bak de ossenhaas in diezelfde pan. Ik vind de ossenhaas medium rare het lekkerst. Maar je mag de ossenhaas natuurlijk bakken zoals je wil.", "Snijd na het bakken de ossenhaas in dunne plakken en beleg je broodje hiermee.", "Doe vervolgens de uiringen erop.", "Maak af met wat peper en zout en de rucola.", "ENJOY! Volkoren boterham of volkoren bol 1 stuk Ossenhaas 100 gram Komkommer 4 plakken Witte ui kwart Ongezouten roomboter 5 gram Rucola handje Zuivelspread bieslook light 10 gram Peper & zout naar smaak Liever vega? Gebruik de Quorn Vegan smoky ham free slices. Je mag ook een biefstukje pakken i.p.v. ossenhaas!"], "page": 15}, {"id": 67, "name": "Salade gerookte zalm", "book": 5, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Gerookte zalm", "amount": "50 gram"}, {"name": "Rucola slamelange", "amount": "75 gram"}, {"name": "Honing mosterd dressing 0% suiker (Remia)", "amount": "15 ml"}, {"name": "Augurk", "amount": "2 stuks"}, {"name": "Komkommer", "amount": "10 plakjes"}, {"name": "Rode ui", "amount": "halve"}, {"name": "Bieslook", "amount": "5 sprieten"}, {"name": "Citroensap", "amount": "6 druppels"}, {"name": "Peper & zout", "amount": "naar smaak"}], "steps": ["Snijd de rode ui, de augurken en de bieslook fijn.", "Doe vervolgens alle ingrediënten in een schaal.", "Breng op smaak met wat peper en zout en de citroensap.", "ENJOY! Liever vega? Neem de visvrije tonijn uit blik van Sea SoGood. Dit gerecht is makkelijk mee te nemen."], "page": 16}, {"id": 68, "name": "Wrap pesto-kip", "book": 5, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren tortilla groot", "amount": "1 stuk"}, {"name": "Mutti pesto", "amount": "30 gram"}, {"name": "Gerookte kipfilet reepjes", "amount": "75 gram"}, {"name": "Tomaat", "amount": "1 stuk"}, {"name": "Rucola", "amount": "handje"}, {"name": "Parmezaanse kaas", "amount": "10 gram"}, {"name": "Peper & zout naar wens", "amount": ""}], "steps": ["Verdeel de pesto over het midden van de tortilla.", "Snijd de tomaat in plakjes.", "Verdeel de tomaat, de rucola en de kipfilet over de pesto.", "Rasp de parmezaanse kaas over de tortilla en maak af met wat peper en zout.", "ENJOY! Liever vega? Gebruik de Quorn Vegan chicken free slices, neem dezelfde hoeveelheid en snijd deze in plakjes. Dit gerecht is makkelijk mee te nemen."], "page": 17}, {"id": 69, "name": "Broodje ossenworst speciaal", "book": 5, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Ossenworst", "amount": "100 gram"}, {"name": "Augurk", "amount": "1 stuk"}, {"name": "Rode ui kwart", "amount": "Truffelmayo"}, {"name": "1 tl á 7 gram Peper & zout", "amount": "naar smaak"}], "steps": ["Rooster de boterham en laat even afkoelen.", "Snijd de augurk en de ui in kleine blokjes en de ossenworst in vier plakjes.", "Smeer de truffelmayo op de boterham.", "Beleg vervolgens je boterham met de ossenworst, de augurk en de ui.", "Maak af met wat peper en zout.", "ENJOY! Liever vega? Ga dan voor vega filet americain van de Vegetarische slager."], "page": 18}, {"id": 70, "name": "AVG’TJE", "book": 5, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Rundertartaar", "amount": "2 stuks"}, {"name": "Kruimige aardappels", "amount": "500 gram"}, {"name": "Diepvries spinazie", "amount": "600 gram"}, {"name": "Franse mosterd", "amount": "2 tl"}, {"name": "Nootmuskaat", "amount": "1 tl"}, {"name": "Ongezouten roomboter", "amount": "10 gram"}, {"name": "Italiaanse kruiden", "amount": "2 tl"}, {"name": "Peper & zout", "amount": "naar smaak"}, {"name": "Liever vega? Gebruik de vegan rul stukjes van AH huismerk. ", "amount": ""}], "steps": ["Verwarm de oven voor op 220 °C.", "Was en schil de aardappels. Snijd de aardappels zes keer in, dus niet helemaal door. Bestrooi met de Italiaanse kruiden en een klein scheutje olijfolie. Meng het even door elkaar en doe de aardappels 40 minuten in de oven.", "Warm de spinazie op in een steelpannetje en giet af zodra het warm is. Bestrooi met de nootmuskaat en wat peper en zout. Roer de mosterd ook door de spinazie.", "Verhit de roomboter in een koekenpan en bak de rundertartaartjes gaar. Verdeel alles over twee borden.", "ENJOY! Rundertartaar 2 stuks Kruimige aardappels 500 gram Diepvries spinazie 600 gram Franse mosterd 2 tl Nootmuskaat 1 tl Ongezouten roomboter 10 gram Italiaanse kruiden 2 tl Peper & zout naar smaak Liever vega? Gebruik de vegan rul stukjes van AH huismerk."], "page": 20}, {"id": 71, "name": "Butter chicken", "book": 5, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Kipfilet blokjes", "amount": "300 gram"}, {"name": "Zilvervliesrijst", "amount": "150 gram"}, {"name": "(ongekookt) Tomatenblokjes naturel", "amount": "100 gram"}, {"name": "Magere yoghurt", "amount": "70 ml"}, {"name": "Kookroom light", "amount": "100 ml"}, {"name": "Rode ui", "amount": "1 stuk"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Chili poeder", "amount": "1/2 tl"}, {"name": "Garam masala", "amount": "2 tl"}, {"name": "Paprikapoeder", "amount": "1 tl"}, {"name": "Peper & zout", "amount": "naar smaak"}], "steps": ["Snijd de knoflook en de rode ui fijn.", "Doe de kipfilet, de rode ui, de knoflook, de garam masala, de chili poeder, de paprika poeder, wat peper en zout en de magere yoghurt in een kom. Meng alles goed door elkaar. Laat dit tien minuten staan.", "Kook de zilvervliesrijst volgens de verpakking.", "Verhit een klein scheutje olijfolie in een wokpan en doe daar de kipfilet in. Bak de kipfilet goed gaar.", "Voeg dan de tomatenblokjes en de kookroom toe en bak nog vijf minuutjes door.", "Verdeel de rijst en butter chicken over twee borden.", "ENJOY Liever vega? Gebruik de kipstuckjes van de Vegetarische slager."], "page": 21}, {"id": 72, "name": "Varkenshaasspies", "book": 5, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Varkenshaas", "amount": "2 stuks"}, {"name": "Groene paprika", "amount": "1 stuk"}, {"name": "Courgette", "amount": "1 stuk"}, {"name": "Rode ui", "amount": "1 stuk"}, {"name": "Cherrytomaatjes", "amount": "12 stuks"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Honing", "amount": "25 gram"}, {"name": "Sojasaus (groene dop)", "amount": "25 ml"}, {"name": "Paprikapoeder", "amount": "1 tl"}, {"name": "Chilipoeder", "amount": "1 tl"}, {"name": "Peper & zout", "amount": "naar smaak"}], "steps": ["Verwarm de oven voor op 220 °C.", "Snijd de varkenshaas, de paprika, de courgette en de rode ui in grove stukken.", "Pers de knoflook en doe dit in een schaaltje. Voeg de honing, de sojasaus, wat peper en zout, de chilipoeder en de paprikapoeder toe.", "Rijg de paprika, de courgette, de rode ui, de cherrytomaatjes en de varkenshaas om en om aan de spies.", "Leg de varkenshaasspiezen op een met aluminiumfolie bedekte bakplaat. De overgebleven groenten of varkenshaasstukjes mogen los op de bakplaat.", "Giet het mengsel uit het schaaltje over de bakplaat als sausje.", "Draai ze even om zodat er overal saus zit.", "Zet de bakplaat 30 minuten in de oven, draai de spiezen na vijftien minuten om.", "Verdeel alles over twee bordjes.", "ENJOY! Varkenshaas bevat weinig vet: 1,9 gram per 100 gram. Vleesvervangers bevatten over het algemeen veel vetten. Ik zou, als je vega wil, kiezen voor jackfruit. Jackfruit kan je, net als de varkenshaas, in stukjes aan de prikker rijgen. De jackfruit hoeft alleen niet zo lang in de oven."], "page": 22}, {"id": 73, "name": "Salade beef", "book": 5, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Ossenhaas", "amount": "300 gram"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Rucola slamelange", "amount": "150 gram"}, {"name": "Gesneden kastanje champignons", "amount": "200 gram"}, {"name": "Groene aspergetips", "amount": "1 zakje"}, {"name": "Cherry tomaatjes", "amount": "8 stuks"}, {"name": "Bosui", "amount": "3 sprieten"}, {"name": "Komkommer een kwart", "amount": "Parmezaanse kaas"}, {"name": "20 gram Peper en zout", "amount": "naar smaak"}], "steps": ["Snijd de ossenhaas in blokjes.", "Verhit een scheutje olijfolie in een wokpan en pers de knoflook hierbij.", "Doe de ossenhaas en de kastanje champignons in de pan en bak ongeveer in vijf minuutjes gaar.", "Doe de aspergetips in een grillpan en grill deze ongeveer acht á tien minuutjes. Bestrooi met wat peper en zout.", "Halveer de cherrytomaatjes en snijd de bosui in kleine ringen. Snijd ook de komkommer klein.", "Verdeel de sla, de komkommer, de tomaatjes, de bosui, de ossenhaas en de champignons over twee borden. Rasp de parmezaanse kaas en verdeel die ook over de twee borden.", "Maak af met wat peper en zout.", "ENJOY! Liever vega? Gebruik de kipstuckjes van de Vegetarische slager. Vegan rulgehakt is ook lekker in dit gerecht!"], "page": 23}, {"id": 74, "name": "Kabeljauw stoofpotje", "book": 5, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Kabeljauw", "amount": "300 gram (2 stuks)"}, {"name": "Italiaanse roerbakgroente", "amount": "400 gram"}, {"name": "Mozzarella light", "amount": "50 gram"}, {"name": "Tomatensaus naturel", "amount": "500 gram"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Sjalotjes", "amount": "2 stuks"}, {"name": "Italiaanse kruiden", "amount": "2 tl"}, {"name": "Basilicum", "amount": "5 blaadjes"}, {"name": "Peper & zout", "amount": "naar smaak"}], "steps": ["Snijd de knoflook, de basilicum en de sjalotjes fijn.", "Verhit een scheutje olijfolie in een grote hapjespan of stoofpan.", "Fruit de knoflook en sjalotjes twee minuten aan.", "Voeg vervolgens de roerbakgroente toe en roerbak dit nog even vijf minuutjes.", "Voeg de basilicum en de tomatensaus toe.", "Breng aan de kook met de deksel op de pan.", "Snijd de kabeljauw in stukken en bestrooi met de Italiaanse kruiden en wat peper en zout.", "Voeg de kabeljauw toe in de pan en stoof ongeveer tien minuutjes op middelhoog vuur, tot de kabeljauw gaar is. Plaats ook nu de deksel op de pan.", "Pluk de mozzarella in kleine stukjes en voeg toe aan je stoofpotje, tot het gesmolten is.", "Verdeel de stoof over twee bordjes en maak af met nog wat extra peper en zout.", "ENJOY! Helaas zijn er nog niet veel vega vis opties. Je kan hier eventueel de visvrije tonijn van Seasogood pakken. Er bestaat vega zalm, maar die bevat 12 gram meer vet dan kabeljauw."], "page": 24}, {"id": 75, "name": "Pastinaak-puree met paddenstoelen", "book": 5, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Kruimige aardappels", "amount": "400 gram"}, {"name": "Pastinaak", "amount": "1 stuk"}, {"name": "Kastanjechampignons", "amount": "250 gram"}, {"name": "Sjalotjes", "amount": "4 stuks"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Water", "amount": "1 L"}, {"name": "Magere melk", "amount": "100 ml"}, {"name": "Bio Today bouillon", "amount": "2 tl"}, {"name": "Pompoenpitten", "amount": "2 tl"}, {"name": "Tijm en rozemarijn", "amount": "beiden 2 takjes"}, {"name": "Ongezouten roomboter", "amount": "10 gram"}, {"name": "Peper & zout", "amount": "naar smaak"}], "steps": ["Schil de aardappels en de pastinaak en snijd in gelijke stukken. Snijd drie van de vier sjalotjes, de knoflook, de rozemarijn en de tijm fijn.", "Doe de aardappels, de pastinaak, de sjalotjes, de knoflook, de rozemarijn, de bouillon en het water in een soeppan en breng aan de kook. Laat twintig minuten op laag vuur koken, met de deksel op de pan.", "Snijd het laatste sjalotje klein en snijd de champignons in plakjes.", "Verhit de roomboter in de pan en bak daarin de champignons en het sjalotje, voeg ook de tijm toe.", "Giet de pan met de aardappels, de pastinaak, etc. af in een vergiet. Doe alles terug in de pan en voeg de magere melk toe. Stamp met een pureestamper tot een puree.", "Verhit de pompoenpitten in een koekenpan zonder olie en wacht tot ze iets bruiner worden.", "Verdeel de puree over twee borden en strooi de champignons er overheen. Gebruik de jus die overblijft in de pan en maak af met de pompoenpitten.", "ENJOY! Optioneel: stukje kabeljauw á 100 gram p.p. bakken in een klein beetje olijfolie."], "page": 25}, {"id": 76, "name": "Lasagne met pulled chicken", "book": 5, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Kipfilet", "amount": "300 gram"}, {"name": "Volkoren tortilla", "amount": "2 stuks"}, {"name": "Mexicaanse wokgroente", "amount": "400 gram"}, {"name": "Tomatenblokjes", "amount": "400 gram"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "30+ kaas geraspt", "amount": "40 gram"}, {"name": "Mexicaanse kruiden", "amount": "1 tl"}, {"name": "Peper & zout", "amount": "naar smaak"}], "steps": ["Verwarm de oven voor op 200°C.", "Vul een soeppan voor de helft met water en kook de kipfilets twintig minuten.", "Verhit ondertussen een klein scheutje olijfolie in een wokpan en pers de knoflook hierbij. Wok de groenten hierin ongeveer vijf minuten op hoog vuur. Voeg de tomatenblokjes en de kruiden toe en zet het vuur zachter.", "Snijd ondertussen de tortilla in negen plakken. Ongeveer twee cm per plak: dit worden je lasagne bladeren.", "Als de kip klaar is, pluk je deze met twee vorken uit elkaar. Zo krijg je pulled chicken. Doe de pulled chicken bij de groenten en roer alles even door.", "Pak een ovenschotel en doe er een laagje pulled chicken- groentemengsel in. Bedek dat vervolgens met de tortilla plakjes. Herhaal dit tot alles op is en strooi de kaas als laatste eroverheen.", "Zet de lasagne nog vijftien minuutjes in de oven.", "ENJOY! Liever vega? Gebruik de kipstuckjes van de Vegetarische slager of gebruik jackfruit. Jackfruit is plantaardig en kan je ook als pulled jackfruit eten!"], "page": 26}, {"id": 77, "name": "Gevulde paprika’s", "book": 5, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Rode paprika’s", "amount": "4 stuks"}, {"name": "Mager rundergehakt", "amount": "300 gram"}, {"name": "Kidneybonen", "amount": "150 gram"}, {"name": "Witte ui", "amount": "1 stuk"}, {"name": "Mais", "amount": "100 gram"}, {"name": "Tomaten", "amount": "2 stuks"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Feta kaas", "amount": "50 gram"}, {"name": "Crême fraïche light", "amount": "50 gram"}, {"name": "Peper & zout", "amount": "naar smaak"}, {"name": "Liever vega? Gebruik de vegan rul stukjes van AH huismerk. ", "amount": ""}], "steps": ["Verwarm de oven voor op 180°C.", "Snijd de bovenkantjes van de paprika’s en verwijder de zaadlijsten.", "Verwijder het vruchtvlees van de tomaten en snijd de rest van de tomaten in blokjes.", "Snijd de ui fijn.", "Verhit een klein scheutje olie in een pan en pers de knoflook. Doe het gehakt, de knoflook en de ui in de pan en bak het gehakt gaar.", "Voeg vervolgens de kidneybonen, de tomatenblokjes en de mais toe.", "Zet het vuur uit zodra alles warm is. Voeg de crème fraîche en wat peper en zout toe. Roer alles goed door.", "Vul de paprika’s met het gehaktmengsel en maak af met de feta.", "Doe de paprika’s vijftien minuutjes in de oven.", "ENJOY! Rode paprika’s 4 stuks Mager rundergehakt 300 gram Kidneybonen 150 gram Witte ui 1 stuk Mais 100 gram Tomaten 2 stuks Knoflook 1 teentje Feta kaas 50 gram Crême fraïche light 50 gram Peper & zout naar smaak Liever vega? Gebruik de vegan rul stukjes van AH huismerk."], "page": 27}, {"id": 78, "name": "Cracker Hüttenkäse met aardbei", "book": 6, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Volkoren crackers (Wasa)", "amount": "2 stuks"}, {"name": "Aardbeien", "amount": "5 stuks"}, {"name": "Hüttenkäse", "amount": "75 gram"}, {"name": "Peper en zout", "amount": "Naar smaak"}], "steps": ["Beleg de crackers met alle ingrediënten.", "ENJOY!"], "page": 9}, {"id": 79, "name": "Baked chocolate-chip", "book": 6, "meal_type": "diner", "portions": "1", "ingredients": [{"name": "Banaan", "amount": "Halve"}, {"name": "Volkoren speltmeel", "amount": "40 gram"}, {"name": "Magere melk", "amount": "75 ml"}, {"name": "90% chocolade", "amount": "15 gram"}, {"name": "Vanille aroma", "amount": "1 tl"}, {"name": "Stevia", "amount": "2 druppels"}, {"name": "Bakpoeder", "amount": "1 tl"}], "steps": ["Verwarm de oven voor op 200 °C.", "Prak de halve banaan, eet de andere helft lekker op.", "Doe alle andere ingrediënten, behalve de chocolade, erbij en roer door tot het meel goed gemengd is.", "Giet alles in een klein ovenschaaltje.", "Breek de chocolade in stukjes en leg deze bovenop.", "Zet twintig minuutjes in de oven.", "ENJOY! Banaan Halve Volkoren speltmeel 40 gram Magere melk 75 ml 90% chocolade 15 gram Vanille aroma 1 tl Stevia 2 druppels Bakpoeder 1 tl"], "page": 10}, {"id": 80, "name": "Ei prutje", "book": 6, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Ei", "amount": "1 stuk"}, {"name": "Eiwit van een ei", "amount": "1 stuk"}, {"name": "Magere melk", "amount": "150 ml"}, {"name": "Grof volkoren havervlokken", "amount": "30 gram"}, {"name": "Sjalotje", "amount": "1 stuk"}, {"name": "Cherry tomaatjes", "amount": "2 stuks"}, {"name": "Zuivelspread bieslook light", "amount": "10 gram"}, {"name": "Italiaanse kruiden", "amount": "1 tl"}, {"name": "Peper en zout", "amount": "Naar smaak"}], "steps": ["Doe het ei, eiwit, de havermout, kruiden en melk in de blender.", "Snij het sjalotje en de tomaatjes in kleine stukjes en doe bij het ei-mengsel.", "Verhit een scheutje olijfolie in een koekenpan en bak als pannenkoek.", "Bak gaar tot de bovenkant niet meer vloeibaar is, maak hem dan stuk met je spatel en bak tot alles gaar is.", "Doe de zuivelspread in de pan zodat het wat smeuïger wordt.", "Doe het prutje op een bord.", "ENJOY!"], "page": 11}, {"id": 81, "name": "Milkshake", "book": 6, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Bevroren roodfruit mix", "amount": "125 gram"}, {"name": "Grof volkoren havervlokken", "amount": "25 gram"}, {"name": "Soja melk", "amount": "150 ml"}, {"name": "Optimel Griekse stijl vanille yoghurt", "amount": "150 gram"}], "steps": ["Doe alle ingrediënten in de blender.", "ENJOY! Makkelijk mee te nemen in een beker en snel gemaakt!"], "page": 12}, {"id": 82, "name": "Choco shake", "book": 6, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Banaan", "amount": "1 stuk"}, {"name": "Magere melk", "amount": "100 ml"}, {"name": "Optimel Griekse stijl vanille yoghurt", "amount": "200 gram"}, {"name": "Bevroren pompoen", "amount": "100 gram"}, {"name": "Bevroren spinazie", "amount": "50 gram"}, {"name": "Raw cacao poeder", "amount": "10 gram"}], "steps": ["Doe alle ingrediënten in de blender.", "ENJOY! Makkelijk mee te nemen in een beker en snel gemaakt! Optioneel: twee druppels stevia."], "page": 13}, {"id": 83, "name": "Portobelloburger", "book": 6, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Portobello", "amount": "2 stuks"}, {"name": "Hüttenkäse", "amount": "100 gram"}, {"name": "Cherrytomaatjes", "amount": "5 stuks"}, {"name": "Onbehandelde pecannoten", "amount": "20 gram"}, {"name": "Cajun kruiden", "amount": "1 tl"}, {"name": "Peper en zout Flink wat", "amount": ""}], "steps": ["Grill de portobello’s ongeveer drie minuten in een grillpan of onder de grill. Laat even uitlekken.", "Doe de Hüttenkäse in een bakje en meng met de kruiden.", "Was en halveer de cherrytomaatjes en breek de pecannoten in stukjes.", "Vul de portobello met de Hüttenkäse, pecannoten en cherrytomaatjes en leg de andere portobello bovenop.", "ENJOY! Portobello 2 stuks Hüttenkäse 100 gram Cherrytomaatjes 5 stuks Onbehandelde pecannoten 20 gram Cajun kruiden 1 tl Peper en zout Flink wat"], "page": 15}, {"id": 84, "name": "Zoetig broodje", "book": 6, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Ei", "amount": "1 stuk"}, {"name": "Optimel Griekse stijl vanille yoghurt", "amount": "100 gram"}, {"name": "Granaatappelpitjes", "amount": "1 tl"}, {"name": "Honing", "amount": "10 gram"}, {"name": "Banaan", "amount": "100 gram"}], "steps": ["Verwarm de oven voor op 180°C.", "Meng het ei, de kwark en de honing met elkaar in een bakje.", "Druk het broodje in het midden plat en verdeel daarover het kwarkmengsel.", "Snij de banaan in plakjes en leg bovenop.", "Leg het broodje twaalf minuutjes in de oven.", "ENJOY!"], "page": 16}, {"id": 85, "name": "Caesar salade", "book": 6, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Slamelange", "amount": "150 gram"}, {"name": "Gerookte kipfiletreepjes", "amount": "150 gram"}, {"name": "Sjalotje", "amount": "Halve"}, {"name": "Magere Franse kwark", "amount": "50 gram"}, {"name": "Parmezaanse kaas", "amount": "15 gram"}, {"name": "Cherrytomaatjes", "amount": "5 stuks"}, {"name": "Komkommer Kwart", "amount": "Stevia"}, {"name": "2 druppels Volkoren soepstengel", "amount": "1 stuk"}, {"name": "Peper en zout", "amount": "Naar smaak"}, {"name": "Liever vega? Gebruik de kipstuckjes van de Vegetarische slager. - makkelijk mee te nemen naar werk!", "amount": ""}], "steps": ["Snij de cherrytomaatjes, komkommer en het sjalotje in stukjes.", "Doe de sla, cherrytomaatjes, sjalotje, kipreepjes en de komkommer in een schaal en roer alles door.", "Rasp de Parmezaanse kaas en meng met de kwark, doe de druppels stevia ook hierbij.", "Doe het kwarkmengsel door de salade.", "Versnipper de volkoren soepstengel boven de salade.", "Maak af met wat peper en zout.", "ENJOY! Slamelange 150 gram Gerookte kipfiletreepjes 150 gram Sjalotje Halve Magere Franse kwark 50 gram Parmezaanse kaas 15 gram Cherrytomaatjes 5 stuks Komkommer Kwart Stevia 2 druppels Volkoren soepstengel 1 stuk Peper en zout Naar smaak Liever vega? Gebruik de kipstuckjes van de Vegetarische slager. - makkelijk mee te nemen naar werk!"], "page": 17}, {"id": 86, "name": "Broodje knaks", "book": 6, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "2 stuks"}, {"name": "Magere knakworstjes (Unox)", "amount": "4 stuks"}, {"name": "Zero fritessaus", "amount": "20 gram"}], "steps": ["Opwarmen, opmaken, broodje bovenop en eten maar.", "ENJOY! Liever vega? Helaas zijn de vegetarische knakworstjes hoger in vetten. Vier stuks zijn niet erg maar ik zou niet het hele bakje leeg eten. - Je kan de knaks ook koud eten dus je kan ze makkelijk meenemen naar werk!"], "page": 18}, {"id": 87, "name": "Broodje dunner", "book": 6, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren pita broodje", "amount": "1 stuk"}, {"name": "Gerookte kipfiletplakjes", "amount": "150 gram"}, {"name": "IJsbergsla", "amount": "Handje"}, {"name": "Komkommer", "amount": "4 plakjes"}, {"name": "Tomaat", "amount": "4 plakjes"}, {"name": "Shoarmakruiden", "amount": "15 gram"}, {"name": "Magere Franse kwark", "amount": "100 gram"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Verse peterselie", "amount": "1 takje"}, {"name": "Peper en zout", "amount": "Naar smaak"}], "steps": ["Bak het pita broodje af volgens de verpakking.", "Verwarm de kipfiletplakjes in een pan en doe de shoarmakruiden er overheen.", "Pers de knoflook en snij de peterselie fijn.", "Meng de knoflook, peterselie, magere Franse kwark, peper en zout. Zet even in de koelkast.", "Vul je pita broodje met de kipfilet, tomaat, komkommer, sla en je zelfgemaakte knoflooksaus.", "ENJOY! Liever vega? Gebruik de kipstuckjes van de Vegetarische slager. - Niet alle kip gaat in het pita broodje, je kan de rest gewoon los opeten uiteraard."], "page": 19}, {"id": 88, "name": "Broodje guacamole", "book": 6, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Avocado", "amount": "100 gram"}, {"name": "Rucola", "amount": "Handje"}, {"name": "Granaatappelpitjes", "amount": "1 tl"}, {"name": "Cherrytomaatjes", "amount": "3 stuks"}, {"name": "Cajun kruiden", "amount": "1 tl"}, {"name": "Knoflookpoeder", "amount": "1/2 tl"}, {"name": "Peper en zout", "amount": "Naar smaak"}], "steps": ["Rooster de boterham en laat even afkoelen.", "Prak de avocado in een bakje en meng met de kruiden.", "Snij de cherrytomaatjes klein en roer die door de avocado.", "Doe alles op je boterham en maak af met de granaatappelpitjes en rucola.", "ENJOY!"], "page": 20}, {"id": 89, "name": "Geitenkaas salade", "book": 6, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Geitenkaas 40+ honing", "amount": "80 gram"}, {"name": "Rucola slamelange", "amount": "300 gram"}, {"name": "Groene aspergetips", "amount": "100 gram"}, {"name": "Komkommer", "amount": "Halve"}, {"name": "Cherrytomaatjes", "amount": "5 stuks"}, {"name": "Appel Een halve", "amount": "Blauwe bessen"}, {"name": "Grote hand Peper en zout", "amount": "Naar smaak"}], "steps": ["Leg de aspergetips tien minuten in een grillpan zonder olie, heb je geen grillpan? Bak ze dan gewoon in een koekenpan. Besprenkel met peper en zout.", "Snij ondertussen de appel in blokjes.", "Doe na vijf minuten de blokjes appel ook in de pan en bak deze nog vijf minuutjes mee.", "Snij de cherrytomaatjes en komkommer in blokjes.", "Verdeel de slamelange, komkommer, cherrytomaatjes en blauwe bessen over twee borden.", "Leg de aspergetips en appeltjes boven op de salade en versnipper de geitenkaas eroverheen.", "Maak af met wat extra peper en zout.", "ENJOY! Geitenkaas 40+ honing 80 gram Rucola slamelange 300 gram Groene aspergetips 100 gram Komkommer Halve Cherrytomaatjes 5 stuks Appel Een halve Blauwe bessen Grote hand Peper en zout Naar smaak"], "page": 22}, {"id": 90, "name": "Bloemkoolrisotto met spinaziepesto", "book": 6, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Bloemkoolrijst", "amount": "300 gram"}, {"name": "Spinazie", "amount": "100 gram"}, {"name": "Olijfolie", "amount": "1 el"}, {"name": "Basilicum", "amount": "30 gram"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Champignons", "amount": "200 gram"}, {"name": "Onbehandelde cashewnoten", "amount": "70 gram"}, {"name": "Parmezaanse kaas", "amount": "40 gram"}, {"name": "Peper en zout", "amount": "Naar smaak"}], "steps": ["Doe de spinazie, basilicum, knoflook, onbehandelde cashewnoten, Parmezaanse kaas, peper en zout, olie en een klein scheutje warm water in de blender. Dit is je pesto.", "Wok de champignons een minuut of vier en voeg daarna de bloemkoolrijst toe. Wok nog twee minuutjes en doe vervolgens de pesto door het gerecht. Verdeel alles over twee bordjes.", "ENJOY! Hoe langer je de bloemkoolrijst mee wokt, hoe gaarder de bloemkool wordt. Dus minder knapperig. Dit kan je juist lekker vinden of juist niet. Even uitproberen dus!"], "page": 23}, {"id": 91, "name": "Chicken pasta", "book": 6, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Volkoren spaghetti", "amount": "150 gram"}, {"name": "(ongekookt) Kipfiletblokjes", "amount": "300 gram"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Champignons", "amount": "200 gram"}, {"name": "Witte ui", "amount": "1 stuk"}, {"name": "Courgette Een halve", "amount": "Cherrytomaatjes"}, {"name": "8 stuks Hüttenkäse", "amount": "100 gram"}, {"name": "Parmezaanse kaas", "amount": "50 gram"}, {"name": "Peper en zout Flink wat", "amount": ""}], "steps": ["Kook de spaghetti volgens verpakking.", "Snij de knoflook en alle groenten in blokjes.", "Bak de kipfiletblokjes, samen met de knoflook en ui, in een klein scheutje olijfolie. Voeg na twee minuten alle groenten toe en bak tot de kip gaar.", "Voeg vervolgens de spaghetti toe.", "Roer de Hüttenkäse door de spaghetti en rasp de Parmezaanse kaas er doorheen. Wacht tot dat de kaas gesmolten is.", "Verdeel de spaghetti over twee borden en maak af met wat peper en zout.", "ENJOY! Liever vega? Gebruik de kipstuckjes van de Vegetarische slager. Tip: Strooi wat chilivlokken over de kipfilet voor een pitje."], "page": 24}, {"id": 92, "name": "Pad thai", "book": 6, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Volkoren noodles", "amount": "150 gram"}, {"name": "(ongekookt) Thaise wokgroenten", "amount": "400 gram"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Limoen Sap van een halve", "amount": "100% pindakaas"}, {"name": "1/2 el (5 gram) Ketchup zonder suiker", "amount": "50 gram"}, {"name": "Sojasaus (groene dop)", "amount": "40 ml"}, {"name": "Eieren", "amount": "2 stuks"}, {"name": "Ongezouten pinda’s", "amount": "20 gram"}, {"name": "Bosui", "amount": "1 streng"}], "steps": ["Kook de noodles volgens verpakking.", "Verhit een scheutje olijfolie en wok de groenten gaar, op middelhoog vuur.", "Kook de eieren zeven minuten.", "Meng in een kommetje de sojasaus, pindakaas, ketchup, limoensap en de knoflook (geperst).", "Snij de bosui en pinda’s fijn.", "Doe de noodles en groenten bij elkaar en roer even door. Voeg het sausje toe en roer nogmaals door.", "Verdeel de pad Thai over twee borden en maak af met de bosui, ei en pinda’s.", "ENJOY!"], "page": 25}, {"id": 93, "name": "Macaroni", "book": 6, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Gele erwten macaroni", "amount": "150 gram"}, {"name": "Extra mager rundergehakt", "amount": "300 gram"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Macaroni groenten", "amount": "400 gram"}, {"name": "Tomatenpuree", "amount": "60 gram"}, {"name": "30+ kaas geraspt", "amount": "40 gram"}, {"name": "Verse basilicum", "amount": "10 blaadjes"}, {"name": "Macaroni & spaghetti kruiden", "amount": "2 el"}, {"name": "Peper en zout", "amount": "Naar smaak"}], "steps": ["Kook de macaroni volgens verpakking.", "Snij de basilicum fijn.", "Pers de knoflook en doe het, samen met het gehakt, in een wok met een klein scheutje olijfolie. Bak het gehakt gaar.", "Voeg de macaroni groenten toe en bak ook deze groenten gaar.", "Voeg de macaroni toe.", "Voeg de kruiden en tomatenpuree toe. Je kan er voor kiezen om de kaas nu toe te voegen of om de macaroni met de kaas af te toppen.", "ENJOY! Liever vega? Gebruik de vegan rul stukjes van AH huismerk."], "page": 26}, {"id": 94, "name": "Chili con carne", "book": 6, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Extra mager rundergehakt", "amount": "300 gram"}, {"name": "Witte ui", "amount": "1 stuk"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Rode paprika", "amount": "1 stuk"}, {"name": "Kidneybonen", "amount": "200 gram"}, {"name": "Gepelde tomaten", "amount": "300 gram"}, {"name": "Verse peterselie", "amount": "2 takjes"}, {"name": "Limoensap", "amount": "1 el"}, {"name": "Zuivelspread light naturel", "amount": "50 gram"}, {"name": "Chili con carne kruiden", "amount": "1 el"}, {"name": "Peper en zout", "amount": "Naar smaak"}], "steps": ["Pers de knoflook en snij de rode ui fijn. Verhit een scheutje olijfolie in een wokpan en fruit de knoflook en ui aan.", "Voeg het gehakt toe, inclusief de chili con carne kruiden.", "Spoel de bonen af in een vergiet en laat even uitlekken. Voeg vervolgens de bonen en de gepelde tomaten toe aan de pan.", "Snij de paprika in blokjes en voeg deze ook toe. Breng op smaak met peper en zout.", "Laat vijf minuutjes pruttelen.", "Snij de peterselie fijn en meng met de zuivelspread. Mix dit door de chili con carne.", "Verdeel de chili con carne over twee borden en maak af met wat limoensap.", "ENJOY! Liever vega? Gebruik de vegan rul stukjes van AH huismerk."], "page": 27}, {"id": 95, "name": "Kipkerrie met rijst", "book": 6, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Zilvervliesrijst", "amount": "150 gram"}, {"name": "(ongekookt) Sperziebonen", "amount": "250 gram"}, {"name": "Kipfiletblokjes", "amount": "300 gram"}, {"name": "Rode ui", "amount": "1 stuk"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Crème fraîche light", "amount": "100 gram"}, {"name": "Limoensap", "amount": "1 el"}, {"name": "Bio Today bouillon", "amount": "1 el"}, {"name": "Kerriepoeder", "amount": "1 el"}, {"name": "Kurkuma", "amount": "1/2 el"}, {"name": "Verse peterselie", "amount": "1 takje"}, {"name": "Peper en zout", "amount": "Naar smaak"}], "steps": ["Kook de sperziebonen en rijst volgens verpakking.", "Snipper de ui en knoflook en fruit deze aan in een wok met een scheutje olijfolie.", "Voeg de kip toe en bak gaar.", "Als de kip gaar is voeg je de bouillonpoeder toe met 75 ml water.", "Roer de crème fraîche, kerriepoeder, kurkuma, peper en zout en het limoensap hier ook doorheen. Laat het even iets indikken.", "Snij de peterselie fijn.", "Doe vervolgens de sperziebonen bij het kipmengsel.", "Verdeel de rijst en het kipmengsel over twee borden en maak af met de peterselie.", "ENJOY! Liever vega? Gebruik de kipstuckjes van de Vegetarische slager of gebruik jackfruit. Jackfruit is plantaardig."], "page": 28}, {"id": 96, "name": "Zalmfilet met groene curry-bloemkoolpuree", "book": 6, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Zalmfilet", "amount": "2 stuks (125 per filet ong.)"}, {"name": "Bloemkool", "amount": "1 stuk"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Groene curry pasta (Fairtrade)", "amount": "2 tl"}, {"name": "Kokosmelk light", "amount": "75 ml"}, {"name": "Peterselie", "amount": "1 takje"}, {"name": "Cajun kruiden", "amount": "1 tl"}, {"name": "Peper en zout", "amount": "Naar smaak"}, {"name": "Liever vega? Voeg extra sojaboontjes toe en laat de zalm weg. ", "amount": ""}], "steps": ["Verwarm de oven voor op 200°C.", "Kook de bloemkool ongeveer twaalf minuutjes en laat de bloemkool goed uitlekken.", "Doe de zalmpjes in een ovenschotel en druppel er wat olijfolie op.", "Pers een teentje knoflook en verdeel over de zalmpjes. Strooi ook de cajun kruiden en wat peper en zout over de zalm.", "Zet de zalm twaalf minuutjes in de oven.", "Doe de kokosmelk, groene curry pasta en bloemkool in de blender.", "Verdeel de groene curry-bloemkoolpuree over twee borden en leg op ieder bord een zalmpje.", "Maak af met wat peper, zout en peterselie.", "ENJOY! Zalmfilet 2 stuks (125 per filet ong.) Bloemkool 1 stuk Knoflook 2 teentjes Groene curry pasta (Fairtrade) 2 tl Kokosmelk light 75 ml Peterselie 1 takje Cajun kruiden 1 tl Peper en zout Naar smaak Liever vega? Voeg extra sojaboontjes toe en laat de zalm weg."], "page": 29}, {"id": 97, "name": "Cheesecake", "book": 7, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Griekse stijl yoghurt vanille (Optimel)", "amount": "200 gram"}, {"name": "Eiwit van een ei", "amount": "1 stuk"}, {"name": "Volkoren speltmeel", "amount": "15 gram"}, {"name": "Frambozen", "amount": "10 stuks"}, {"name": "Digestive suikervrij", "amount": "1 koekje"}], "steps": ["Verwarm de oven voor op 180 °C.", "Meng de yoghurt, het eiwit en het meel met elkaar.", "Plet de frambozen met een vork tot een soort jam.", "Gebruik een ovenbestendig bakje en verkruimel het koekje onderop, vervolgens het yoghurtmengsel en daar bovenop de frambozen.", "Bak de cheesecake twintig minuutjes in de oven.", "ENJOY! - Makkelijk de avond van tevoren te bereiden en smaakt koud ook lekker. - Makkelijk mee te nemen naar werk!"], "page": 10}, {"id": 98, "name": "Overnight oats", "book": 7, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Volkoren havermout", "amount": "20 gram"}, {"name": "Ongezoete amandelmelk", "amount": "10 ml"}, {"name": "Banaan", "amount": "1 stuk"}, {"name": "Blauwe bessen", "amount": "10 besjes"}, {"name": "Honing Een halve tl", "amount": "Vanille aroma"}, {"name": "1 tl Chiazaad", "amount": "1 tl"}, {"name": "- LET OP: deze moet de avond van tevoren gemaakt worden. - Makkelijk mee te nemen naar werk!", "amount": ""}], "steps": ["Doe 20 ml water in een pannetje en kook de besjes kapot.", "Doe ondertussen de havermout, melk, chiazaadjes en vanille aroma in een bakje. Prak de banaan hier doorheen tot een mengsel.", "Als de besjes een soort prutje zijn geworden, roer je deze ook door het mengsel.", "Druppel nu de honing er overheen.", "Zet minimaal één nacht in de koelkast.", "ENJOY! Volkoren havermout 20 gram Ongezoete amandelmelk 10 ml Banaan 1 stuk Blauwe bessen 10 besjes Honing Een halve tl Vanille aroma 1 tl Chiazaad 1 tl - LET OP: deze moet de avond van tevoren gemaakt worden. - Makkelijk mee te nemen naar werk!"], "page": 11}, {"id": 99, "name": "Chocolade mousse", "book": 7, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Pompoenblokjes", "amount": "400 gram"}, {"name": "Honing", "amount": "5 gram"}, {"name": "Raw Cacaopoeder", "amount": "15 gram"}, {"name": "Vanille aroma", "amount": "1 tl"}, {"name": "Frambozen", "amount": "5 stuks"}, {"name": "Water", "amount": "10 ml"}, {"name": "Kokosrasp", "amount": "1 el"}], "steps": ["Kook de pompoenblokjes gaar.", "Zodra de pompoenblokjes gaar zijn, spoel je ze even goed onder de kraan af zodat ze koud worden.", "Doe alles, behalve de kokosrasp en frambozen, in de blender.", "Giet in een bakje en maak de mousse af met de kokosrasp en frambozen.", "ENJOY! - Makkelijk de avond van tevoren te bereiden en smaakt koud ook lekker. - Makkelijk mee te nemen naar werk!"], "page": 12}, {"id": 100, "name": "Tiramisu", "book": 7, "meal_type": "diner", "portions": "1", "ingredients": [{"name": "Griekse stijl yoghurt vanille (Optimel)", "amount": "200 gram"}, {"name": "Espresso", "amount": "1 kopje"}, {"name": "Rijstwafel", "amount": "2 stuks"}, {"name": "Cacaopoeder", "amount": "1 tl"}], "steps": ["Zet een kopje espresso, laat even afkoelen en schenk de espresso in een diep bord.", "Leg de rijstwafels hier in en draai ze een keer om.", "Wacht tot de rijstwafels zijn volgezogen met espresso.", "Leg vervolgens 1 rijstwafel op een bord, doe daar een laagje vanille yoghurt op, daarop weer 1 rijstwafel en maak het af met het laatste restje vanille yoghurt.", "Strooi de cacaopoeder er overheen.", "ENJOY!"], "page": 13}, {"id": 101, "name": "Shakshuka", "book": 7, "meal_type": "diner", "portions": "1", "ingredients": [{"name": "Eieren", "amount": "2 stuks"}, {"name": "Tomatenblokjes", "amount": "200 gram"}, {"name": "Tomatenpuree", "amount": "1 el"}, {"name": "Rode ui Een halve", "amount": "Knoflook"}, {"name": "1 teentje Komijnpoeder", "amount": "1 tl"}, {"name": "Paprika poeder", "amount": "1 tl"}, {"name": "Chilipeper Naar smaak!", "amount": "Verse peterselie"}, {"name": "2 stengels Peper en zout", "amount": "Flink wat"}], "steps": ["Snij de ui, knoflook en peterselie fijn.", "Verhit een scheutje olijfolie in een pannetje en fruit de knoflook en ui.", "Voeg de tomatenblokjes, tomatenpuree en alle kruiden toe, behalve de fijngesneden peterselie. Roer even door en laat vijf minuutjes pruttelen.", "Maak twee kuiltjes in de saus en doe daar de eitjes in, hou ze heel.", "Doe een deksel op de pan en laat het geheel op zacht vuur nog acht minuten pruttelen. Ik vind de eieren zo het lekkerst. Wil jij ze helemaal doorgegaard hebben? Laat ze dan nog wat langer pruttelen.", "Zet je pannetje op een onderzetter en maak af met wat verse peterselie.", "ENJOY!"], "page": 14}, {"id": 102, "name": "Tortilla pulled chicken", "book": 7, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren tortilla", "amount": "1 grote"}, {"name": "Kipfilet", "amount": "100 gram"}, {"name": "Tomaten", "amount": "1 stuk"}, {"name": "Rode ui Een halve", "amount": "30+ kaas"}, {"name": "20 gram Mexicaanse kruiden", "amount": "1 tl"}, {"name": "Peper en zout", "amount": "Naar smaak"}, {"name": "- Liever vega? Gebruik de kipstuckjes van de Vegetarische slager. - Haast? Pak dan gewoon gerookte kipfilet plakken.", "amount": "- Tip: Maak een rauwkostsalade en doe de overgebleven kipfilet hier doorheen."}, {"name": "Lekker als tussendoortje! ", "amount": ""}], "steps": ["Kook de kipfilet in twaalf minuten gaar.", "Snij de tortilla in, van boven naar het midden.", "Snij de tomaat in plakjes en de halve ui in ringen.", "Als de kipfilet gaar is, trek je deze met twee vorken uit elkaar. Strooi de kruiden hier overheen.", "Verdeel de ingrediënten over vier vlakken. Zie de foto hierboven.", "Vouw de tortilla op, dit doe je door de vier delen over elkaar te vouwen.", "Leg de tortilla vijf minuutjes onder een tosti-ijzer of grill.", "ENJOY! Volkoren tortilla 1 grote Kipfilet 100 gram Tomaten 1 stuk Rode ui Een halve 30+ kaas 20 gram Mexicaanse kruiden 1 tl Peper en zout Naar smaak - Liever vega? Gebruik de kipstuckjes van de Vegetarische slager. - Haast? Pak dan gewoon gerookte kipfilet plakken. - Tip: Maak een rauwkostsalade en doe de overgebleven kipfilet hier doorheen. Lekker als tussendoortje!"], "page": 16}, {"id": 103, "name": "Spinazie wrap met zalm", "book": 7, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Spinazie", "amount": "100 gram"}, {"name": "Eieren", "amount": "1 stuk"}, {"name": "Eiwit", "amount": "Van 1 ei"}, {"name": "Gerookte zalm", "amount": "50 gram"}, {"name": "Zuivelspread bieslook light", "amount": "20 gram"}, {"name": "Oregano", "amount": "1 tl"}, {"name": "Italiaanse kruiden", "amount": "1 tl"}, {"name": "Peper en zout", "amount": "Naar smaak"}], "steps": ["Verhit een scheutje olijfolie in een kleine pan en laat de spinazie slenken.", "Kluts het ei met de kruiden en het eiwit van het andere ei en voeg toe aan de pan.", "Bak zo de spinazie wrap gaar en leg op een bord.", "Smeer in het midden de zuivelspread uit in een soort lijn. Leg de gerookte zalm hier overheen.", "Rol de wrap op.", "ENJOY! Liever vega? Vervang de gerookte zalm voor avocado."], "page": 17}, {"id": 104, "name": "Salade gegrilde groenten", "book": 7, "meal_type": "diner", "portions": "1", "ingredients": [{"name": "Pruimen", "amount": "1 stuk"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Sla melange", "amount": "75 gram"}, {"name": "Rode puntpaprika", "amount": "2 stuks"}, {"name": "Courgette", "amount": "1 stuk"}, {"name": "Feta", "amount": "50 gram"}, {"name": "Rode ui", "amount": "Halve"}, {"name": "Zwarte olijven", "amount": "4 stuks"}, {"name": "Granaatappelpitjes", "amount": "2 tl"}, {"name": "Peper en zout", "amount": "Naar smaak"}, {"name": "Als je de salade iets ‘drassiger’ wil, kan je wat Remia zero dressing over de salade gieten.", "amount": ""}], "steps": ["Verwijder de zaadlijsten van de puntpaprika’s en snij deze samen met de courgette in lange reepjes.", "Snij de pruim in vieren.", "Verwarm een scheutje olijfolie in een grillpan en pers de knoflook uit boven de pan.", "Grill de pruim, paprika’s en courgette gaar: als deze wat slapper worden zijn ze gaar. Smaak is natuurlijk persoonlijk, het mag ook wat knapperiger blijven.", "Doe wat peper en zout over de groenten.", "Snij de olijven in plakjes en de halve ui in ringen.", "Doe de sla in een bak, daarover de gegrilde groenten, pruimstukjes, rode ui, olijven, granaatappelpitjes en brokkel de feta eroverheen.", "ENJOY! Pruimen 1 stuk Knoflook 1 teentje Sla melange 75 gram Rode puntpaprika 2 stuks Courgette 1 stuk Feta 50 gram Rode ui Halve Zwarte olijven 4 stuks Granaatappelpitjes 2 tl Peper en zout Naar smaak Als je de salade iets ‘drassiger’ wil, kan je wat Remia zero dressing over de salade gieten."], "page": 18}, {"id": 105, "name": "Tosti", "book": 7, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "2 stuks"}, {"name": "30+ kaas", "amount": "1 plak"}, {"name": "Gerookte achterham", "amount": "1 plak"}], "steps": ["Broodje opmaken, opwarmen en eten maar.", "ENJOY! - Niet zeuren dat je deze zelf ook wel had kunnen verzinnen, het is voor ieder wat wils :-) En daarnaast, wist jij dat je dus best af en toe een tosti mag eten? Ja dus. Kneiterlekker toch? - Tip: heb je tijd? Grill dan een stuk paprika en jalapeño in de pan en doe deze ertussen samen met wat rucola. - Wil je graag saus? Pak dan een eetlepel ketchup zero sugar."], "page": 19}, {"id": 106, "name": "Spicy tuna springroll", "book": 7, "meal_type": "diner", "portions": "1", "ingredients": [{"name": "Volkoren rijstvel", "amount": "1 vel"}, {"name": "Geraspte wortel", "amount": "Handje"}, {"name": "Komkommer Een kwart", "amount": "Tonijn op waterbasis"}, {"name": "1 blikje Avocado", "amount": "70 gram"}, {"name": "Magere franse kwark", "amount": "1 el"}, {"name": "Sweet chili saus (Illiebillie)", "amount": "2 el"}, {"name": "Sojasaus groene dop", "amount": "2 el"}, {"name": "Sesamzaadjes", "amount": "1 tl"}, {"name": "Peper en zout", "amount": "Naar smaak"}], "steps": ["Snij de komkommer en avocado in reepjes.", "Meng de kwark met de chili saus, tonijn, peper en het zout.", "Week het rijstvel 20 seconden in een kom met lauwwarm water.", "Let op: doe dit snel - leg het rijstvel op een snijplank en vul vervolgens met de komkommer, wortel, avocado en het tonijnmengsel.", "Rol op tot halverwege en vouw dan de zijkantjes naar binnen, rol vervolgens verder.", "Sprenkel de sesamzaadjes over de springroll.", "Doe de sojasaus in een kommetje en dip daar je springroll in.", "ENJOY!"], "page": 20}, {"id": 107, "name": "Pulled chicken op blad", "book": 7, "meal_type": "diner", "portions": "1", "ingredients": [{"name": "Kipfilet", "amount": "100 gram"}, {"name": "Krop sla", "amount": "2 bladen"}, {"name": "Remia friteslijn", "amount": "1 el"}, {"name": "Smokey bbq saus zero", "amount": "2 el"}, {"name": "Cherrytomaatjes", "amount": "6 stuks"}, {"name": "Rode ui Een halve", "amount": "Cajun kruiden"}, {"name": "1 tl Knoflookpoeder", "amount": "1/2 tl"}, {"name": "Feta", "amount": "10 gram"}, {"name": "Peper en zout", "amount": "Naar smaak"}], "steps": ["Kook de kipfilet in tien minuutjes gaar.", "Trek de gekookte kip vervolgens met twee vorken uit elkaar.", "Voeg mayo, bbq saus, cajun, knoflookpoeder en peper en zout toe.", "Leg de krop sla op een bordje en vul met de pulled chicken.", "Halveer de tomaatjes, snijd de halve ui in ringen en leg deze bovenop.", "Bestrooi met feta.", "ENJOY! Liever vega? Gebruik de kipstuckjes van de Vegetarische slager."], "page": 21}, {"id": 108, "name": "Pokébowl krokante kip", "book": 7, "meal_type": "ontbijt", "portions": "2", "ingredients": [{"name": "Zilvervliesrijst", "amount": "200 gram (ongekookt)"}, {"name": "Kipfilet", "amount": "250 gram"}, {"name": "Komkommer", "amount": "12 plakjes"}, {"name": "Crispy mais", "amount": "1 blikje"}, {"name": "Sojabonen", "amount": "2 el"}, {"name": "Bio cornflakes", "amount": "40 gram"}, {"name": "Volkoren speltmeel", "amount": "40 gram"}, {"name": "Ei", "amount": "1 stuk"}, {"name": "Soja saus groene dop", "amount": "20 ml"}, {"name": "Remia friteslijn", "amount": "50 gram"}, {"name": "Paprikapoeder", "amount": "2 tl"}, {"name": "Bosui", "amount": "2 sprieten"}, {"name": "Liever vega? Gebruik de kipstuckjes van de Vegetarische slager. ", "amount": ""}], "steps": [" Verwarm de oven voor op 200°C.", " Doe het speltmeel, het ei en de cornflakes in drie verschillende bakjes.", " Het bakje met meel laat je even staan. Roer het ei door met een vork en versnipper de cornflakes met je handen.", " Snij de kipfilet in ongeveer 8 reepjes.", " Haal vervolgens de kipfilet eerst door het meel, daarna door het ei en als laatste door de cornflakes. Besprenkel met de paprikapoeder.", " Leg de kipfilets op een bakpapier en zet twintig minuutjes in de oven.", " In de tussentijd kook je de rijst volgens de aanwijzing op de verpakking. Als de rijst klaar is meng je de sojasaus er doorheen.", " Snij de komkommer in plakjes.", " Spoel de mais en sojabonen af en laat ze even uitlekken.", "Verdeel de rijst, komkommer, mais, sojabonen en de kipfilets over twee borden of bakjes.", "Maak af met de mayo friteslijn en de bosui.", "ENJOY! Zilvervliesrijst 200 gram (ongekookt) Kipfilet 250 gram Komkommer 12 plakjes Crispy mais 1 blikje Sojabonen 2 el Bio cornflakes 40 gram Volkoren speltmeel 40 gram Ei 1 stuk Soja saus groene dop 20 ml Remia friteslijn 50 gram Paprikapoeder 2 tl Bosui 2 sprieten Liever vega? Gebruik de kipstuckjes van de Vegetarische slager."], "page": 23}, {"id": 109, "name": "Skinny sushi", "book": 7, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Bloemkoolrijst", "amount": "300 gram"}, {"name": "Hüttenkäse light", "amount": "150 gram"}, {"name": "Zoetstof", "amount": "3 druppels"}, {"name": "Nori vellen", "amount": "4 stuks"}, {"name": "Radijs", "amount": "3 radijsjes"}, {"name": "Zalmhaasje", "amount": "150 gram"}, {"name": "Komkommer", "amount": "4 lange plakken"}, {"name": "Sesamzaadjes", "amount": "2 tl"}, {"name": "Soja saus groene dop", "amount": "6 el"}], "steps": ["Meng de rauwe bloemkoolrijst met de Hüttenkäse, sojasaus en zoetstof.", "Leg de vier nori vellen op het aanrecht, verdeel de bloemkoolrijst over de nori vellen en hou ongeveer twee centimeter over aan de zijkanten.", "Met een kaasschaaf maak je plakjes van de komkommer, dit doe je over de lengte van de komkommer.", "Snij het zalmhaasje en de radijs in mooie dunne plakken.", "Beleg de nori vellen in het midden met alle ingrediënten, bouw dit op. Dus je begint met de komkommer, de radijsjes en als laatste de zalm.", "Rol de nori vellen heel voorzichtig op en snij in plakjes.", "Besprenkel met sesamzaadjes.", "Verdeel over twee borden.", "ENJOY! - Lieve vega? Gebruik avocado. - Hou je niet van vis? Gebruik kipfilet of de pulled chicken van de lunch! Geloof me, dit was een lastige. Sushi is helemaal niet zo gezond als je denkt. Vaak wordt sushi aan elkaar geplakt met een flinke dosis suiker en de toppings zijn vaak vettere ingrediënten. Denk aan zalm, avocado, gefrituurde garnaal of kipdij. Dus, geniet er lekker van want het heeft even geduurd om deze praktisch (zonder rollen) en lekker mager te maken!"], "page": 24}, {"id": 110, "name": "Dahl", "book": 7, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Zilvervliesrijst", "amount": "200 gram (ongekookt)"}, {"name": "Sjalot", "amount": "3 stuks"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Linzen 0% zout", "amount": "200 gram"}, {"name": "Water", "amount": "250 ml"}, {"name": "Tomatenblokjes naturel", "amount": "400 gram"}, {"name": "Rode peper", "amount": "Naar smaak"}, {"name": "Kerriepoeder", "amount": "1 tl"}, {"name": "Garam masala", "amount": "3 tl"}, {"name": "Komijnpoeder", "amount": "2 tl"}, {"name": "Peper & zout", "amount": "Naar smaak"}], "steps": ["Snij de sjalotjes, rode peper en knoflook fijn.", "Verwarm één el olijfolie in de pan en fruit de sjalotjes, peper en knoflook.", "Laat de linzen even uitlekken.", "Voeg dan de linzen, garam masala, komijnpoeder, kerriepoeder, tomatenblokjes en het water toe en laat twintig minuutjes pruttelen.", "Kook de rijst volgens de aanwijzingen op de verpakking.", "Verdeel je prutje (dahl) en rijst over twee borden.", "Maak af met wat peper en zout.", "ENJOY. Optioneel: peterselie of koriander"], "page": 25}, {"id": 111, "name": "Nasi", "book": 7, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Zilvervliesrijst", "amount": "200 gram (ongekookt)"}, {"name": "Kipfiletblokjes", "amount": "300 gram"}, {"name": "Nasi wokgroenten", "amount": "450 gram"}, {"name": "Korianderpoeder", "amount": "1 tl"}, {"name": "Komijnpoeder", "amount": "1 tl"}, {"name": "Kerriepoeder", "amount": "1 tl"}, {"name": "Paprikapoeder", "amount": "1 tl"}, {"name": "Gehakte gember", "amount": "1 tl"}, {"name": "Ketjap Manis", "amount": "20 ml"}, {"name": "Sojasaus groene dop", "amount": "20 ml"}, {"name": "Sesamzaadjes", "amount": "1 tl"}], "steps": ["Kook de rijst volgens de aanwijzingen op de verpakking.", "Doe alle ingrediënten, behalve de kipfilet en groenten, bij elkaar in een kommetje.", "Verhit een scheutje olijfolie (als je sesamolie hebt staan mag dat ook) in een wokpan en bak op laag vuur het kruidenmengsel tot het lekker gaat ruiken.", "Voeg de kipfiletblokjes toe en bak gaar.", "Voeg vervolgens de groenten toe en bak het geheel nog tien minuutjes.", "Voeg de rijst toe en meng alles goed door elkaar.", "Verdeel de nasi over twee borden.", "ENJOY! Liever vega? Vervang de kipfilet voor een gebakken eitje. Houd je van pittig? Voeg dan een halve rode peper toe."], "page": 26}, {"id": 112, "name": "Gevulde courgette met rivierkreeftjes", "book": 7, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Courgette", "amount": "2 stuks"}, {"name": "Gele paprika", "amount": "1 stuk"}, {"name": "Rode ui", "amount": "1 stuk"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Tomatenblokjes naturel", "amount": "300 gram"}, {"name": "Feta", "amount": "40 gram"}, {"name": "Rivierkreeftjes", "amount": "100 gram"}, {"name": "Italiaanse kruiden", "amount": "5tl"}, {"name": "Peper en zout", "amount": "Naar smaak"}], "steps": ["Verwarm de oven voor op 180°C.", "Snij de courgette’s doormidden. Lepel deze uit, gooi het vruchtvlees niet weg!", "Doe een klein scheutje olijfolie in iedere courgette en verdeel dit met een bakkwast. Zet de courgette’s vijftien minuten in de oven.", "Snij de ui en de knoflook klein en snij de gele paprika in blokjes.", "Verhit een scheutje olijfolie in een pan en bak de ui en de paprika.", "Voeg de tomatenblokjes, vruchtvlees van de courgette’s, kruiden en rivierkreeftjes toe. Roer alles door en laat even pruttelen.", "Zodra de courgette’s klaar schep je het mengsel in de courgette’s.", "Bestrooi met feta.", "Maak af met peper en zout.", "ENJOY! Liever vega? Laat de rivierkreeftjes weg en voeg peulvruchten toe."], "page": 27}, {"id": 113, "name": "Krokante aardappeltjes met mexicaanse touch", "book": 7, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Krieltjes met schil", "amount": "300 gram"}, {"name": "Bonenmix", "amount": "310 gram (1 blik)"}, {"name": "Tomatenpulp", "amount": "400 ml (1 blik)"}, {"name": "Parmezaanse kaas", "amount": "30 gram"}, {"name": "Taco kruiden zero sugar zero salt", "amount": "1 zakje"}], "steps": ["Verwarm de oven voor op 180°C.", "Snij de krieltjes in zo dun mogelijke plakjes (je kan hiervoor een kaasschaaf gebruiken) en leg ze op een met bakpapier bekleed ovenrooster.", "Besprenkel de aardappeltjes met de helft van de taco kruiden en smeer ze met een bakkwast in met wat olijfolie.", "Zet de krieltjes twintig minuten in de oven.", "Laat de bonenmix uitlekken.", "Verwarm in een pan de tomatenpulp met de andere helft van de taco kruiden, voeg de bonenmix toe.", "Verdeel de krieltjes over twee borden.", "Schep het tomaten- bonenmengsel over de krieltjes.", "Maak af met de parmezaanse kaas.", "ENJOY! Verrassend lekker, al zeg ik het zelf!"], "page": 28}, {"id": 114, "name": "Turkse pizza met knoflooksaus", "book": 7, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Volkoren tortilla groot", "amount": "2 stuks"}, {"name": "Extra mager rundergehakt", "amount": "300 gram"}, {"name": "Magere Franse kwark", "amount": "4 el"}, {"name": "Cherrytomaatjes", "amount": "5 stuks"}, {"name": "Sjalotje", "amount": "1 stuk"}, {"name": "Komkommer", "amount": "10 plakjes"}, {"name": "Bieslook", "amount": "10 sprieten"}, {"name": "Oregano", "amount": "2 tl"}, {"name": "Zoetstof (zie boodschappenlijst)", "amount": "5 druppels"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "IJsbergsla Twee handjes", "amount": "Peper en zout"}, {"name": "Flink wat ", "amount": ""}], "steps": ["Verdeel het gehakt rauw over de tortilla en besprenkel met peper en zout.", "Verhit een scheutje olijfolie in de pan en leg de tortilla in de pan met het gehakt naar onderen.", "Bak tot het gehakt gaar is en bak hem dan nog even op de andere kant. Doe dit ook met de tweede tortilla.", "Snij de bieslook en knoflook fijn en meng het met de kwark, oregano en zoetstof. Dit is je zelfgemaakte knoflooksaus.", "Snij het sjalotje in plakjes.", "Beleg de tortilla met de ijsbergsla, tomaatjes, komkommer, sjalotje en de knoflooksaus.", "Maak af met nog wat peper en zout.", "ENJOY - Tip: als je het lekker vindt, voeg dan wat peterselie toe. - Liever vega? Gebruik vegan rulstukjes van AH huismerk. Deze kan je alleen niet ‘vastplakken’ aan de wrap, dus dan zou je het erin moeten doen."], "page": 29}, {"id": 115, "name": "Orzo met kabeljauw en bieslooksaus", "book": 7, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Orzo", "amount": "200 gram (ongekookt)"}, {"name": "Kabeljauwhaasjes", "amount": "2 stuks"}, {"name": "Sjalotje", "amount": "2 stuks"}, {"name": "Bieslook", "amount": "15 sprieten"}, {"name": "Kastanje champignons", "amount": "125 gram"}, {"name": "Kookroom light", "amount": "100 ml"}, {"name": "Aspergetips", "amount": "1 trosje"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Parmezaanse kaas", "amount": "30 gram"}, {"name": "Bio Today bouillon", "amount": "2 el"}, {"name": "Citroen Een halve", "amount": "Peper en zout"}, {"name": "Naar smaak Liever vega? Je kan spinazie toevoegen of iets lekkers uit de switchtabel kiezen.", "amount": ""}], "steps": ["Kook de orzo volgens verpakking.", "Snij de bieslook, sjalotjes en knoflook fijn.", "Verhit een scheutje olijfolie in een pan en fruit de knoflook en sjalotjes. Bak hierin vervolgens de kabeljauw goudbruin en in dezelfde pan kan je de aspergetips bakken. Voeg ook de champignons toe.", "Doe de bieslook, bouillonpoeder en kookroom light samen in een pannetje en knijp de citroen hierin uit.", "Rasp de parmezaanse kaas en voeg deze bij het sausje.", "Verwarm de saus.", "Verdeel de orzo, kabeljauw, champignons en aspergetips over twee borden en giet de saus hier overheen.", "Maak af met peper en zout.", "ENJOY! Orzo 200 gram (ongekookt) Kabeljauwhaasjes 2 stuks Sjalotje 2 stuks Bieslook 15 sprieten Kastanje champignons 125 gram Kookroom light 100 ml Aspergetips 1 trosje Knoflook 1 teentje Parmezaanse kaas 30 gram Bio Today bouillon 2 el Citroen Een halve Peper en zout Naar smaak Liever vega? Je kan spinazie toevoegen of iets lekkers uit de switchtabel kiezen."], "page": 30}, {"id": 116, "name": "Fruity Bowl", "book": 1, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Magere franse kwark", "amount": "200 gram"}, {"name": "Kiwi", "amount": "1 stuk"}, {"name": "Blauwe bessen", "amount": "20 gram"}, {"name": "Kaneel", "amount": "snufje"}, {"name": "Moerbeibessen", "amount": "10 gram"}, {"name": "Bio cornflakes", "amount": "5 gram"}, {"name": "Lijnzaad", "amount": "2 gram"}], "steps": [" Doe de kwark in een bakje en meng met de stevia en kaneel.", " Schil de kiwi", " Leg deze op je kwark samen met de blauwe bessen.", " Strooi de cornflakes, moerbeibessen en lijnzaad eroverheen.", " ENJOY! Het fijne aan deze Fruity Bowl is dat je veel bite hebt, het gevoel van kauwen zorgt er bij mij voor dat ik langer vol zit dan een smoothie die je zo wegdrinkt."], "page": 7}, {"id": 117, "name": "Fluffy Bowl", "book": 1, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Magere franse kwark", "amount": "200 gram"}, {"name": "Bevroren aardbeien", "amount": "60 gram"}, {"name": "Banaan", "amount": "1 stuk"}, {"name": "Avocado", "amount": "Halve"}, {"name": "Stevia", "amount": "2 druppels"}, {"name": "Kaneel", "amount": "Snufje"}, {"name": "Rozijnen", "amount": "10 gram"}, {"name": "Onbehandelde pecannoten", "amount": "10 gram"}, {"name": "Bio cornflakes", "amount": "10 gram"}], "steps": [" Doe de kwark, aardbeien, banaan, halve avocado, stevia en kaneel in de blender.", " Doe alles in een bakje en maak af met de cornflakes, rozijnen en pecannoten.", " ENJOY! De reden dat deze smoothie zo mega fluffy is komt door de avocado, je proeft de avocado totaal niet maar hij maakt de smoothie heel erg romig. Tip: probeer eens bevroren kersen!"], "page": 8}, {"id": 118, "name": "Choco Bowl", "book": 1, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Optimel bosvruchten yoghurt", "amount": "200 ml"}, {"name": "Bio cornflakes", "amount": "10 gram"}, {"name": "Onbehandelde pecannoten", "amount": "10 gram"}, {"name": "Lindt 90% cacao reep", "amount": "10 gram"}, {"name": "Granaatappelpitjes of een handje blauwe bessen", "amount": "5 gram"}], "steps": [" Verwarm de chocolade au-bain marie.", " Doe de yoghurt, cornflakes, rozijnen en pecannoten in een schaaltje.", " Strooi de chocolade met een lepeltje eroverheen.", " Zet het bakje eventjes 5 minuten in de koelkast zodat de chocolade hard word.", " ENJOY!"], "page": 9}, {"id": 119, "name": "Summer Bowl", "book": 1, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Magere franse kwark", "amount": "200 gram"}, {"name": "Bevroren aardbeien", "amount": "80 gram"}, {"name": "Blauwe bessen", "amount": "30 gram"}, {"name": "Kaneel", "amount": "snufje"}, {"name": "Stevija", "amount": "2 druppels"}, {"name": "Bio cornflakes", "amount": "10 gram"}, {"name": "Rozijnen", "amount": "10 gram"}], "steps": [" Gooi de kwark, blauwe bessen, aardbeien, kaneel & stevia in de blender.", " Schenk alles in een kommetje en maak af met de cornflakes en rozijnen.", " ENJOY! Het fijne aan deze Summer Bowl is door de bevroren aardbeien lijkt het een beetje op ijs. En doordat het zo koud is worden de rozijnen een beetje hard, i like!"], "page": 10}, {"id": 120, "name": "Bananen pannenkoekjes", "book": 1, "meal_type": "ontbijt", "portions": "1", "ingredients": [{"name": "Banaan", "amount": "1 stuk"}, {"name": "Ei", "amount": "2 stuks"}, {"name": "Blauwe bessen", "amount": "handje"}, {"name": "Honing", "amount": "10 gram"}, {"name": "Volkoren havermout", "amount": "2 el"}, {"name": "Kaneel", "amount": "snufje"}], "steps": [" Doe een klein laagje water in een steelpannetje en kook hierin de blauwe bessen tot het water rood word, de blauwe bessen hoeven niet onder water. Voeg hierbij de honing en laat staan tot het wat dikker word.", " Prak de banaan in een mengbeker.", " Voeg de eieren en de havermout toe in de mengbeker en mix het met de staafmixer tot een beslag.", " Verhit een klein scheutje olie in de pan.", " Bak de pannenkoekjes en stapel ze op.", " Gebruik de gekookte blauwe bessen als garnering samen met de zelfgemaakte jam die overblijft.", " Maak af met een snufje kaneel.", " ENJOY!"], "page": 11}, {"id": 121, "name": "Broodje Avo", "book": 1, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Ei", "amount": "1 stuk"}, {"name": "Avocado", "amount": "halve"}, {"name": "Rucola", "amount": "Handje"}, {"name": "Cherry tomaten", "amount": "2 stuks"}, {"name": "Peper & Zout", "amount": "Naar smaak"}], "steps": [" Prak de avocado met een vork op een bordje.", " Breng op smaak met peper en zout.", " Kook een eitje 6 minuten en 30 seconden.", " Toast je brood en verdeel de avocado.", " Leg het ei, de rucola en de tomaatjes er boven op.", " ENJOY!"], "page": 13}, {"id": 122, "name": "Broodje gebakken ei", "book": 1, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Ei", "amount": "2 stuks"}, {"name": "Tomaat", "amount": "1 stuk"}, {"name": "Milner 30+ kaas", "amount": "10 gram"}, {"name": "Peper & Zout", "amount": "Naar smaak"}, {"name": "Italiaanse kruiden", "amount": "Naar smaak"}, {"name": "Oregano", "amount": "Naar smaak"}], "steps": [" Verhit een pan met wat olijfolie.", " Doe de eitjes in de pan, snijd de tomaat in plakjes en leg deze bij de eitjes in de pan. Strooi de kaas eroverheen.", " Rooster ondertussen je boterham.", " Leg de eitjes op de boterham en maak af met de kruiden.", " ENJOY! Als je de eidooiers niet helemaal gaar bakt zorg je ervoor dat je broodje nog wat sappig blijft op het moment dat je deze doorsnijdt. Zo heb je dus geen boter of saus nodig :) Optioneel: bosui is lekker als garnering! Bijschrift"], "page": 14}, {"id": 123, "name": "Broodje Filet Americain", "book": 1, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Magere filet americain", "amount": "40 gram"}, {"name": "Ijsbergsla", "amount": "Handje"}, {"name": "Komkommer", "amount": "4 plakjes"}, {"name": "Peper & Zout", "amount": "Naar smaak"}, {"name": "Bosui", "amount": "Naar smaak"}], "steps": [" Rooster je boterham.", " Doe de filet americain op je boterham en maak af met ijsbergsla, komkommer en bosui.", " Maak op smaak met peper en zout.", " ENJOY! Volkoren boterham 1 stuk Magere filet americain 40 gram Ijsbergsla Handje Komkommer 4 plakjes Peper & Zout Naar smaak Bosui Naar smaak"], "page": 15}, {"id": 124, "name": "Broodje Caprese", "book": 1, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Mozzarella light", "amount": "50 gram"}, {"name": "Pesto", "amount": "1 tl à 7 gram"}, {"name": "Verse basilicum", "amount": "Naar smaak"}, {"name": "Tomaat", "amount": "1 stuk"}, {"name": "Peper & Zout", "amount": "Naar smaak"}], "steps": [" Rooster de boterham.", " Smeer de pesto op de boterham.", " Snijd alles de tomaat en mozzarella in plakjes en beleg je broodje.", " ENJOY!"], "page": 16}, {"id": 125, "name": "Pita kip-gyros", "book": 1, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Volkoren pita broodjes", "amount": "4 stuks"}, {"name": "Kipfilet", "amount": "350 gram"}, {"name": "Magere franse kwark", "amount": "100 gram"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Ijsbergsla", "amount": "1 handje"}, {"name": "Tomaat", "amount": "2 stuks"}, {"name": "Komkommer Halve komkommer", "amount": "Citroensap"}, {"name": "Halve citroen Gyros kruiden", "amount": "Naar wens (ik doe vrij veel)"}, {"name": "Bieslook Naar wens", "amount": ""}], "steps": [" Bak de pitabroodjes af in de oven volgens de verpakking.", " Snijd de kipfilet in kleine blokjes, bestrooi deze met vrij veel gyroskruiden, peper en zout. Bak ze aan in een wokpan.", " Rasp een kwart van de komkommer in een bakje, voeg hierbij de kwark, knoflook, bieslook en het citroensap toe. Breng op smaak met peper en zout.", " Snijd de rest van de komkommer in plakjes en snijd de 2 tomaten ook in plakjes.", " Serveer de komkommer, tomaat en ijsbergsla op een plank of in bakjes op tafel.", " Vul de pitabroodjes met je huisgemaakte tzatziki en de kip, maak af met de garnering naar wens.", " ENJOY! Tip: leuk om te serveren als je een etentje hebt  :)"], "page": 17}, {"id": 126, "name": "Broodje huisgemaakte tonijnsalade", "book": 1, "meal_type": "lunch", "portions": "1", "ingredients": [{"name": "Tonijn op waterbasis", "amount": "1 blikje"}, {"name": "Volkoren boterham", "amount": "1 stuk"}, {"name": "Mosterd", "amount": "1tl"}, {"name": "Augurken", "amount": "1 grote"}, {"name": "Magere franse kwark", "amount": "100 gram"}, {"name": "Zout en peper", "amount": "Naar smaak"}, {"name": "Stevia", "amount": "2 druppels"}, {"name": "Rode ui Kwart", "amount": "Bieslook"}, {"name": "2 sprieten Zwarte olijven", "amount": "2 stuks"}], "steps": [" Snij de olijven, augurk en de ui in kleine stukjes.", " Doe de kwark, olijven, augurk, ui, mosterd, bieslook, tonijn, peper en zout in een bakje.", " Meng alles goed door.", " Voeg de stevia toe en roer weer goed door.", " Rooster de boterham.", " Doe de huisgemaakte tonijnsalade op de boterham.", " ENJOY!"], "page": 18}, {"id": 127, "name": "Spaghetti carbonara s", "book": 1, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Volkoren spaghetti", "amount": "120 gram (ongekookt)"}, {"name": "Kookroom light", "amount": "125 ml"}, {"name": "Magere melk", "amount": "50 ml"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Magere spekblokjes", "amount": "100 gram"}, {"name": "Ei", "amount": "1 stuks"}, {"name": "Parmezaanse kaas", "amount": "40 gram"}], "steps": ["Kook de spaghetti volgens de verpakking.", "Doe de spekjes in een wokpan en bak ze zover als je zelf lekker vind.", "Meng de knoflook, magere melk, kookroom light en het ei in een kom tot het één geheel word.", "Doe de spaghetti bij de spekjes en voeg daarbij de saus.", "Rasp boven de pan de parmezaanse kaas.", "Roer door tot de saus iets dikker word, dit kun je zelf bepalen wat je lekker vind.", "Serveer op een bord en rasp er nog wat parmezaanse kaas overheen.", "ENJOY! Volkoren spaghetti 120 gram (ongekookt) Kookroom light 125 ml Magere melk 50 ml Knoflook 1 teentje Magere spekblokjes 100 gram Ei 1 stuks Parmezaanse kaas 40 gram"], "page": 20}, {"id": 128, "name": "Pasta Pesto", "book": 1, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Volkoren spaghetti", "amount": "150gram (ongekookt)"}, {"name": "Olijfolie", "amount": "15 ml"}, {"name": "Basilicum", "amount": "30 gram"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Kipfilet blokjes", "amount": "300 gram"}, {"name": "Onbehandelde cashewnoten", "amount": "70 gram"}, {"name": "Parmezaanse kaas", "amount": "40 gram"}, {"name": "Rucola", "amount": "1 handje"}], "steps": ["Doe de basilicum, parmezaanse kaas, ongezouten cashewnoten, knoflook en olijfolie in de keukenmachine of blender. Voeg hier een scheutje warm water aan toe.", "Kook de spaghetti volgens de tijd van de verpakking.", "Verhit een scheutje olijfolie en bak de kip, ik voeg hier zelf italiaanse kruiden, fenegriek en cajun aan toe.", "Voeg de spaghetti bij de kip en voeg vervolgens je zelfgemaakte pesto erbij.", "Voeg hier in de pan nog een flinke scheut warm water aan toe en meng tot het een fluffy geheel is.", "Schep alles op je bord en maak af met wat rucola en parmezaan.", "ENJOY! Volkoren spaghetti 150gram (ongekookt) Olijfolie 15 ml Basilicum 30 gram Knoflook 2 teentjes Kipfilet blokjes 300 gram Onbehandelde cashewnoten 70 gram Parmezaanse kaas 40 gram Rucola 1 handje"], "page": 21}, {"id": 129, "name": "Noodles ossenhaas", "book": 1, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Volkoren Noodles", "amount": "100 gram"}, {"name": "Ketjap Sesam saus (Go-Tan)", "amount": "100ml"}, {"name": "Oosterse wokgroenten", "amount": "200 gram"}, {"name": "Ossenhaas", "amount": "300 gram"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Rode ui", "amount": "Halve"}, {"name": "Kikkoman Soja saus (groene dop)", "amount": "2 eetlepels"}, {"name": "Onbehandelde cashewnoten", "amount": "Klein handje (7/8 stuks)"}, {"name": "Normaal ben ik geen fan van kant en klare sauzen en maak ik ze liever zelf, dit omdat ze altijd hoog in suikers zitten en veel zout bevatten.", "amount": "Deze woksaus bevat 100kcal per 100 gram. Dit recept is voor 2 personen dus"}, {"name": "dat is 50kcal p.p. Dit valt nog mee, alleen de suikers zijn hoog. Doe er daarom niet teveel van in.", "amount": ""}], "steps": ["Bereid de noodles volgens de verpakking.", "Snijd de ossenhaas in fijne blokjes en maak ze op smaak met wat peper en zout.", "Pers twee teentjes knoflook en verdeel deze over de ossenhaas blokjes.", "Gooi de soja saus en ui over de ossenhaas blokjes. Meng alles in een bakje.", "Verhit een scheutje olijfolie en schroei de ossenhaas op hoog vuur dicht (op de foto heb ik hem in zijn geheel gebakken en daarna in plakjes gesneden).", "Voeg de groente toe aan de ossenhaas blokjes en wok deze even mee.", "Voeg de noodles en de Go-Tan saus hier aan toe en schep alles op je bordje.", "Gooi de cashewnoten aan het einde eroverheen.", "ENJOY! Volkoren Noodles 100 gram Ketjap Sesam saus (Go-Tan) 100ml Oosterse wokgroenten 200 gram Ossenhaas 300 gram Knoflook 2 teentjes Rode ui Halve Kikkoman Soja saus (groene dop) 2 eetlepels Onbehandelde cashewnoten Klein handje (7/8 stuks) Normaal ben ik geen fan van kant en klare sauzen en maak ik ze liever zelf, dit omdat ze altijd hoog in suikers zitten en veel zout bevatten. Deze woksaus bevat 100kcal per 100 gram. Dit recept is voor 2 personen dus dat is 50kcal p.p. Dit valt nog mee, alleen de suikers zijn hoog. Doe er daarom niet teveel van in."], "page": 22}, {"id": 130, "name": "Loempia feta", "book": 1, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Filodeeg", "amount": "8 bladeren"}, {"name": "Feta kaas", "amount": "100 gram"}, {"name": "Spinazie", "amount": "200 gram"}, {"name": "Knoflook", "amount": "2 teentjes"}, {"name": "Illie Billie sweet chili", "amount": "60 gram"}, {"name": "Rode ui", "amount": "Halve"}, {"name": "Illie Billie sweet chili saus is voor mij de uitvinding van het jaar. Mijn moeder kwam er mee aan zetten. De chili saus is pittiger dan de normale die we kennen en het allerbeste: hij is suiker", "amount": "vrij!"}], "steps": ["Haal de filodeeg  ’s ochtends uit de vriezer of ontdooi ze tussen een natte theedoek.", "Snijd de rode ui in ringen.", "Bak de spinazie in een wokpan met twee geperste teentjes knoflook en een scheutje olijfolie.", "Vul de filodeeg bladeren met de spinazie en ui, let op: je doet twee bladeren per loempia.", "Sprenkel de feta hier over heen, ongeveer 25 gram per loempia.", "Vouw ze op en strijk ze dicht met wat olie. (In totaal vier loempia’s, twee p.p)", "Leg de loempia’s tien minuten in de airfryer of 12 tot 15 minuten in de oven op 180ºC.", "ENJOY! Filodeeg 8 bladeren Feta kaas 100 gram Spinazie 200 gram Knoflook 2 teentjes Illie Billie sweet chili 60 gram Rode ui Halve Illie Billie sweet chili saus is voor mij de uitvinding van het jaar. Mijn moeder kwam er mee aan zetten. De chili saus is pittiger dan de normale die we kennen en het allerbeste: hij is suiker vrij!"], "page": 23}, {"id": 131, "name": "Groene curry risotto", "book": 1, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "volkoren risotto rijst", "amount": "125 gram (ongekookt)"}, {"name": "Kipfilet blokjes", "amount": "300 gram"}, {"name": "Bio Today bouillon", "amount": "1 theelepel"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Oosterse wokgroenten", "amount": "400 gram"}, {"name": "Fairtrade groene curry kruidenpasta", "amount": "25 gram"}, {"name": "Kokosmelk light", "amount": "200ml"}, {"name": "Water", "amount": "0,75l"}, {"name": "Peper & Zout", "amount": "naar smaak"}], "steps": ["Verhit wat olie in een pan en fruit de knoflook aan.", "Voeg de risotto rijst toe.", "Meng het water met de bouillon en schenk deze beetje bij beetje bij de risotto rijst tot de rijst het allemaal heeft opgenomen.", "Bestrooi de kipfiletblokjes met peper en zout en bak deze vervolgens gaar, voeg de wokgroente toe. Laat deze wel knapperig voor de bite straks.", "Meng in een kommetje de kokosmelk met de groene curry kruidenpasta.", "Voeg de risotto rijst bij de kip en wokgroente en voeg vervolgens de kokosmelk met de kruidenpasta erbij. Laat deze iets inkoken tot het een smeuïg geheel is.", "ENJOY! volkoren risotto rijst 125 gram (ongekookt) Kipfilet blokjes 300 gram Bio Today bouillon 1 theelepel Knoflook 1 teentje Oosterse wokgroenten 400 gram Fairtrade groene curry kruidenpasta 25 gram Kokosmelk light 200ml Water 0,75l Peper & Zout naar smaak"], "page": 24}, {"id": 132, "name": "Pizza", "book": 1, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Filodeeg", "amount": "4 vellen"}, {"name": "Olijfolie", "amount": "1 eetlepel"}, {"name": "Hüttenkäse", "amount": "150 gram"}, {"name": "Gezeefde tomaten", "amount": "100 gram"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Gesneden champignons", "amount": "200 gram"}, {"name": "Rode ui Halve ui", "amount": "Spinazie"}, {"name": "150 gram Rucola", "amount": "Naar smaak"}, {"name": "Oregano", "amount": "Naar smaak"}, {"name": "Let op: de uitleg is voor één pizza, de ingrediënten zijn voor twee pizza’s. Dus eigenlijk doe je de uitleg twee keer.", "amount": ""}], "steps": ["Verwarm de oven voor op 180ºC en leg een bakpapier op een bakplaat. Leg de bevroren filodeeg voor 5 min tussen een natte theedoek.", "Pak voorzichtig één vel filodeeg en leg deze op het bakpapier.", "Bestrijk het velletje met wat olie (gebruik een bakkwast).", "Leg het tweede vel eroverheen.", "Smeer de tomatensaus erop.", "Verspreid vervolgens de Hüttenkäse over de tomatensaus en maak op smaak met wat peper en zout.", "Verhit een klein scheutje olijfolie in een wok pan.", "Gooi de knoflook, champignons en spinazie in de pan en laat slenken.", "Snij de rode ui in halve ringen.", "Gooi het prutje op de pizzabodem en sprenkel de ui er overheen.", "Doe de pizza tien minuten in de oven.", "Maak af met wat oregano.", "ENJOY! Filodeeg 4 vellen Olijfolie 1 eetlepel Hüttenkäse 150 gram Gezeefde tomaten 100 gram Knoflook 1 teentje Gesneden champignons 200 gram Rode ui Halve ui Spinazie 150 gram Rucola Naar smaak Oregano Naar smaak Let op: de uitleg is voor één pizza, de ingrediënten zijn voor twee pizza’s. Dus eigenlijk doe je de uitleg twee keer."], "page": 25}, {"id": 133, "name": "Noodles kip-pinda", "book": 1, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Volkoren Noodles", "amount": "100 gram (ongekookt)"}, {"name": "100% Pindakaas", "amount": "35 gram"}, {"name": "Soja saus", "amount": "15gram"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Rode peper", "amount": "Naar smaak"}, {"name": "Sesam olie", "amount": "2 el"}, {"name": "Oosterse wokgroente", "amount": "400 gram"}, {"name": "Kipfilet", "amount": "300 gram"}, {"name": "Limoen", "amount": "Halve"}], "steps": ["Kook de noodles volgens verpakking", "Meng in een kommetje de pindakaas, limoensap, rode peper, soja saus en één el sesamolie. Dit is je pindasaus.", "Verhit een wokpan met één el sesamolie, bak hierin de kip met de knoflook en wokgroenten. .", "Doe de noodles, kip en wokgroenten bij elkaar en serveer op je bord.", "Giet de pindasaus eroverheen.", "ENJOY!"], "page": 26}, {"id": 134, "name": "Burrito’s", "book": 1, "meal_type": "diner", "portions": "2", "ingredients": [{"name": "Volkoren wraps (Santa maria)", "amount": "4 stuks"}, {"name": "Mexicaanse roerbak groenten", "amount": "250 gram"}, {"name": "Slankie 20+ geraspte kaas", "amount": "30 gram"}, {"name": "Knoflook", "amount": "1 teentje"}, {"name": "Extra mager rundergehakt", "amount": "300 gram"}, {"name": "Creme fraiche light", "amount": "1 eetlepel"}, {"name": "Burrito kruiden", "amount": "1 zakje"}], "steps": ["Verwarm de oven voor op 180ºC", "Doe een scheutje olijfolie in de pan en bak daar de gehakt samen met het teentje knoflook in.", "Zodra de gehakt gaar is gooi je de mexicaanse roerbak groenten en de burrito kruiden erbij.", "Vul de wraps met de gehakt en groenten, rol deze op en prik ze vast met 2 sateprikkers.", "Strooi de kaas boven op en zet ze in de oven.", "Ongeveer 5 minuutjes in de oven tot de kaas gesmolten is. (20+ kaas smelt niet zoals je het kent van de normale geraspte kazen.)", "Doe de eetlepel creme fraiche op je burrito zodat het smelt, of serveer hem ernaast op je bord.", "ENJOY! Tip: meng de zure room met een scheutje Illie Billie sweet chili saus, mega lekker! Op de foto heb ik dit ook gedaan."], "page": 27}];
+
+const DAYS = ['Maandag', 'Dinsdag', 'Woensdag', 'Donderdag', 'Vrijdag', 'Zaterdag', 'Zondag'];
+const MEALS = ['ontbijt', 'lunch', 'diner'];
+const MEAL_LABELS = { ontbijt: 'Ontbijt', lunch: 'Lunch', diner: 'Diner' };
+
+let weekMenu = {};
+let persons = 2;
+let checkedItems = {};
+let currentPicker = null;
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('bd_weekmenu');
+    if (saved) weekMenu = JSON.parse(saved);
+    const savedPersons = localStorage.getItem('bd_persons');
+    if (savedPersons) persons = parseInt(savedPersons);
+    const savedChecked = localStorage.getItem('bd_checked');
+    if (savedChecked) checkedItems = JSON.parse(savedChecked);
+  } catch(e) {}
+  DAYS.forEach(day => {
+    if (!weekMenu[day]) weekMenu[day] = {};
+    MEALS.forEach(meal => {
+      if (!weekMenu[day][meal]) weekMenu[day][meal] = null;
+    });
+  });
+}
+
+function saveState() {
+  localStorage.setItem('bd_weekmenu', JSON.stringify(weekMenu));
+  localStorage.setItem('bd_persons', persons.toString());
+  localStorage.setItem('bd_checked', JSON.stringify(checkedItems));
+}
+
+function showTab(tab) {
+  document.querySelectorAll('.tab-item').forEach(t => {
+    t.classList.toggle('active', t.id === 'tab-' + tab);
+  });
+  if (tab === 'weekmenu') renderWeekMenu();
+  else if (tab === 'recepten') renderRecipes();
+  else if (tab === 'boodschappen') renderShopping();
+  window.scrollTo(0, 0);
+}
+
+function getRecipeById(id) {
+  return RECIPES.find(r => r.id === id);
+}
+
+function renderWeekMenu() {
+  const el = document.getElementById('content');
+  let html = '<div class="week-grid">';
+  DAYS.forEach(day => {
+    const dayMenu = weekMenu[day];
+    const filledCount = MEALS.filter(m => dayMenu[m]).length;
+    html += '<div class="day-card"><div class="day-header"><span>' + day + '</span>';
+    if (filledCount > 0) html += '<button class="clear-day" onclick="clearDay(\'' + day + '\')">Wissen</button>';
+    html += '</div><div class="day-meals">';
+    MEALS.forEach(meal => {
+      const recipeId = dayMenu[meal];
+      const recipe = recipeId ? getRecipeById(recipeId) : null;
+      html += '<div class="meal-slot"><span class="meal-label">' + MEAL_LABELS[meal] + '</span>';
+      if (recipe) {
+        html += '<div class="meal-recipe" onclick="showDetail(' + recipe.id + ')">' + recipe.name + '</div>';
+        html += '<button class="meal-remove" onclick="event.stopPropagation();removeMeal(\'' + day + '\',\'' + meal + '\')">&#215;</button>';
+      } else {
+        html += '<div class="meal-recipe empty" onclick="openPicker(\'' + day + '\',\'' + meal + '\')">+ Kies recept</div>';
+      }
+      html += '</div>';
+    });
+    html += '</div></div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function clearDay(day) {
+  MEALS.forEach(meal => weekMenu[day][meal] = null);
+  saveState();
+  renderWeekMenu();
+}
+
+function removeMeal(day, meal) {
+  weekMenu[day][meal] = null;
+  saveState();
+  renderWeekMenu();
+}
+
+function openPicker(day, meal) {
+  currentPicker = { day, meal };
+  document.getElementById('pickerTitle').textContent = day + ' — ' + MEAL_LABELS[meal];
+  document.getElementById('pickerSearch').value = '';
+  const filtersEl = document.getElementById('pickerFilters');
+  filtersEl.innerHTML = '<button class="filter-btn" data-filter="all" onclick="setPickerFilter(\'all\')">Alle</button>' +
+    '<button class="filter-btn" data-filter="ontbijt" onclick="setPickerFilter(\'ontbijt\')">Ontbijt</button>' +
+    '<button class="filter-btn" data-filter="lunch" onclick="setPickerFilter(\'lunch\')">Lunch</button>' +
+    '<button class="filter-btn" data-filter="diner" onclick="setPickerFilter(\'diner\')">Diner</button>';
+  setPickerFilter(meal);
+  document.getElementById('pickerModal').classList.add('show');
+  setTimeout(() => document.getElementById('pickerSearch').focus(), 300);
+}
+
+let currentFilter = 'all';
+function setPickerFilter(filter) {
+  currentFilter = filter;
+  document.querySelectorAll('#pickerFilters .filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+  filterPicker();
+}
+
+function filterPicker() {
+  const query = document.getElementById('pickerSearch').value.toLowerCase();
+  let filtered = RECIPES.filter(r => {
+    const matchType = currentFilter === 'all' || r.meal_type === currentFilter;
+    const matchQuery = !query || r.name.toLowerCase().includes(query) ||
+                       r.ingredients.some(i => i.name.toLowerCase().includes(query));
+    return matchType && matchQuery;
+  });
+  if (currentPicker) {
+    filtered.sort((a, b) => {
+      if (a.meal_type === currentPicker.meal && b.meal_type !== currentPicker.meal) return -1;
+      if (b.meal_type === currentPicker.meal && a.meal_type !== currentPicker.meal) return 1;
+      return a.name.localeCompare(b.name);
+    });
+  }
+  const listEl = document.getElementById('pickerList');
+  listEl.innerHTML = filtered.map(r =>
+    '<div class="recipe-item" onclick="selectRecipe(' + r.id + ')">' +
+    '<div><div class="recipe-item-name">' + r.name + '</div>' +
+    '<div class="recipe-item-meta">E-book ' + r.book + ' \u2022 ' + r.ingredients.length + ' ingredi\u00ebnten</div></div>' +
+    '<span class="recipe-item-type type-' + r.meal_type + '">' + r.meal_type + '</span></div>'
+  ).join('');
+}
+
+function selectRecipe(id) {
+  if (currentPicker) {
+    weekMenu[currentPicker.day][currentPicker.meal] = id;
+    saveState();
+    closePicker();
+    renderWeekMenu();
+  }
+}
+
+function closePicker() {
+  document.getElementById('pickerModal').classList.remove('show');
+  currentPicker = null;
+}
+
+function showDetail(id) {
+  const r = getRecipeById(id);
+  if (!r) return;
+  let html = '<div class="modal-handle"></div>';
+  html += '<h2>' + r.name + '</h2>';
+  html += '<div class="detail-meta">E-book ' + r.book + ' \u2022 ' + r.meal_type + ' \u2022 ' + r.portions + (r.portions === '1' ? ' persoon' : ' personen') + '</div>';
+  html += '<div class="detail-section"><h3>Ingredi\u00ebnten</h3>';
+  r.ingredients.forEach(i => {
+    html += '<div class="ingredient-row"><span>' + i.name + '</span><span style="color:var(--text-light)">' + i.amount + '</span></div>';
+  });
+  html += '</div>';
+  if (r.steps && r.steps.length > 0) {
+    html += '<div class="detail-section"><h3>Bereiding</h3>';
+    r.steps.forEach((s, i) => {
+      html += '<div class="step-item"><span class="step-num">' + (i+1) + '.</span><span>' + s + '</span></div>';
+    });
+    html += '</div>';
+  }
+  html += '<button class="detail-close" onclick="closeDetail()">Sluiten</button>';
+  document.getElementById('detailContent').innerHTML = html;
+  document.getElementById('detailModal').classList.add('show');
+}
+
+function closeDetail() {
+  document.getElementById('detailModal').classList.remove('show');
+}
+
+function renderRecipes() {
+  const el = document.getElementById('content');
+  el.innerHTML = '<div class="search-bar"><input type="text" id="recipeSearch" placeholder="Zoek recept of ingredi\u00ebnt..." oninput="filterRecipes()"></div>' +
+    '<div class="filter-row">' +
+    '<button class="filter-btn active" data-filter="all" onclick="setRecipeFilter(\'all\')">Alle (' + RECIPES.length + ')</button>' +
+    '<button class="filter-btn" data-filter="ontbijt" onclick="setRecipeFilter(\'ontbijt\')">Ontbijt</button>' +
+    '<button class="filter-btn" data-filter="lunch" onclick="setRecipeFilter(\'lunch\')">Lunch</button>' +
+    '<button class="filter-btn" data-filter="diner" onclick="setRecipeFilter(\'diner\')">Diner</button>' +
+    '</div><div class="recipe-count" id="recipeCount"></div><div class="recipes-grid" id="recipesGrid"></div>';
+  recipeFilter = 'all';
+  filterRecipes();
+}
+
+let recipeFilter = 'all';
+function setRecipeFilter(filter) {
+  recipeFilter = filter;
+  document.querySelectorAll('.filter-row .filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+  filterRecipes();
+}
+
+function filterRecipes() {
+  const query = (document.getElementById('recipeSearch')?.value || '').toLowerCase();
+  const grid = document.getElementById('recipesGrid');
+  if (!grid) return;
+  let filtered = RECIPES.filter(r => {
+    const matchType = recipeFilter === 'all' || r.meal_type === recipeFilter;
+    const matchQuery = !query || r.name.toLowerCase().includes(query) ||
+                       r.ingredients.some(i => i.name.toLowerCase().includes(query));
+    return matchType && matchQuery;
+  });
+  filtered.sort((a, b) => a.name.localeCompare(b.name));
+  document.getElementById('recipeCount').textContent = filtered.length + ' recepten gevonden';
+  grid.innerHTML = filtered.map(r =>
+    '<div class="recipe-card" onclick="showDetail(' + r.id + ')">' +
+    '<div><div class="recipe-item-name">' + r.name + '</div>' +
+    '<div class="recipe-item-meta">E-book ' + r.book + ' \u2022 ' + r.ingredients.length + ' ingredi\u00ebnten</div></div>' +
+    '<span class="recipe-item-type type-' + r.meal_type + '">' + r.meal_type + '</span></div>'
+  ).join('');
+}
+
+function renderShopping() {
+  const el = document.getElementById('content');
+  const allIngredients = [];
+  DAYS.forEach(day => {
+    MEALS.forEach(meal => {
+      const recipeId = weekMenu[day]?.[meal];
+      if (recipeId) {
+        const recipe = getRecipeById(recipeId);
+        if (recipe) {
+          recipe.ingredients.forEach(ing => {
+            allIngredients.push({ name: ing.name, amount: ing.amount, recipe: recipe.name, day: day });
+          });
+        }
+      }
+    });
+  });
+  if (allIngredients.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">\ud83d\uded2</div>' +
+      '<p>Vul eerst je weekmenu in om een<br>boodschappenlijst te genereren.</p></div>';
+    return;
+  }
+  const merged = {};
+  allIngredients.forEach(ing => {
+    const key = ing.name.toLowerCase().trim();
+    if (!merged[key]) merged[key] = { name: ing.name, amounts: [], recipes: [] };
+    merged[key].amounts.push(multiplyAmount(ing.amount, persons));
+    if (!merged[key].recipes.includes(ing.recipe)) merged[key].recipes.push(ing.recipe);
+  });
+  const categories = { 'Groente & Fruit': [], 'Zuivel': [], 'Vlees & Vis': [], 'Brood & Granen': [], 'Kruiden & Sauzen': [], 'Overig': [] };
+  const catKeywords = {
+    'Groente & Fruit': ['spinazie','tomaat','ui','paprika','champignon','courgette','sla','komkommer','avocado','banaan','aardbei','blauwe bessen','frambozen','mango','ananas','kiwi','appel','meloen','citroen','bessen','kersen','druiven','broccoli','prei','wortel','bloemkool','venkel','pastinaak','pompoen','olijven','bosui','knoflook','lente-ui','radijs','rucola','ijsbergsla','veldsla','tuinkers','mais','augurk','fruit','groente','wokgroenten','gember','rode peper','jalapeno','kappertjes','bloedsinaas','rozijnen','moerbeibessen','limoen','granaatappel','peper'],
+    'Zuivel': ['melk','kwark','yoghurt','kaas','feta','mozzarella','ei ','eieren','room','creme','boter','optimel','zuivel','cottage','huttenk','skyr','karnemelk','parmezaan','geitenkaas','breaker'],
+    'Vlees & Vis': ['kip','vlees','gehakt','zalm','tonijn','garnaal','gamba','vis','ossenhaas','rosbief','spek','ham','kalkoen','pangasius','kabeljauw','pulled','varkenshaas','runder','carpaccio','falafel','knakworst','shoarma','kipfilet','rundvlees','filet americain','rollade','worst'],
+    'Brood & Granen': ['brood','boterham','wrap','tortilla','spaghetti','pasta','penne','fusilli','macaroni','rijst','havermout','havervlokken','noodles','couscous','cracker','pita','cornflakes','speltmeel','bloem','meel','bakpoeder','lasagne','risotto','orzo'],
+    'Kruiden & Sauzen': ['zout','kaneel','kruiden','basilicum','oregano','paprikapoeder','kerrie','kurkuma','komijn','nootmuskaat','stevia','honing','suiker','saus','pesto','mayo','mayonaise','olie','olijfolie','azijn','soja','teriyaki','sriracha','sambal','ketjap','mosterd','bouillon','kokosmelk','kookroom','aroma','vanille','cacao','chocolade','nocilla','specerij']
+  };
+  Object.keys(merged).forEach(key => {
+    let placed = false;
+    for (const [cat, keywords] of Object.entries(catKeywords)) {
+      if (keywords.some(kw => key.includes(kw))) {
+        categories[cat].push(merged[key]);
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) categories['Overig'].push(merged[key]);
+  });
+  let html = '<div class="shopping-list"><div class="shopping-header"><h2>Boodschappenlijst</h2>' +
+    '<div class="shopping-actions"><button class="shopping-btn" onclick="copyShoppingList()">Kopieer</button>' +
+    '<button class="shopping-btn" onclick="uncheckAll()">Reset</button></div></div>' +
+    '<div class="persons-selector"><label>Personen:</label>' +
+    '<button class="persons-btn" onclick="changePersons(-1)">\u2212</button>' +
+    '<span class="persons-count">' + persons + '</span>' +
+    '<button class="persons-btn" onclick="changePersons(1)">+</button></div>';
+  Object.entries(categories).forEach(([cat, items]) => {
+    if (items.length === 0) return;
+    items.sort((a, b) => a.name.localeCompare(b.name));
+    html += '<div class="shopping-category"><h3>' + cat + '</h3>';
+    items.forEach(item => {
+      const itemKey = item.name.toLowerCase().trim();
+      const isChecked = checkedItems[itemKey];
+      const amountStr = combineAmounts(item.amounts);
+      const escapedKey = itemKey.replace(/'/g, "\\'");
+      html += '<div class="shopping-item ' + (isChecked ? 'checked-item' : '') + '">' +
+        '<div class="shopping-check ' + (isChecked ? 'checked' : '') + '" onclick="toggleCheck(\'' + escapedKey + '\')">' +
+        (isChecked ? '\u2713' : '') + '</div>' +
+        '<span class="shopping-item-text"><strong>' + item.name + '</strong>' +
+        (amountStr ? ' \u2014 ' + amountStr : '') +
+        '<br><small style="color:var(--text-light)">voor: ' + item.recipes.join(', ') + '</small></span></div>';
+    });
+    html += '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function multiplyAmount(amount, persons) {
+  if (!amount) return amount;
+  return amount.replace(/(\d+[.,]?\d*)/g, (match) => {
+    const num = parseFloat(match.replace(',', '.'));
+    const result = num * persons;
+    return result % 1 === 0 ? result.toString() : result.toFixed(1).replace('.', ',');
+  });
+}
+
+function combineAmounts(amounts) {
+  const unique = [...new Set(amounts.filter(a => a))];
+  if (unique.length === 0) return '';
+  if (unique.length === 1) return amounts.length > 1 ? amounts.length + 'x ' + unique[0] : unique[0];
+  return amounts.join(' + ');
+}
+
+function changePersons(delta) {
+  persons = Math.max(1, Math.min(10, persons + delta));
+  saveState();
+  renderShopping();
+}
+
+function toggleCheck(key) {
+  checkedItems[key] = !checkedItems[key];
+  saveState();
+  renderShopping();
+}
+
+function uncheckAll() {
+  checkedItems = {};
+  saveState();
+  renderShopping();
+}
+
+function copyShoppingList() {
+  const allIngredients = [];
+  DAYS.forEach(day => {
+    MEALS.forEach(meal => {
+      const recipeId = weekMenu[day]?.[meal];
+      if (recipeId) {
+        const recipe = getRecipeById(recipeId);
+        if (recipe) recipe.ingredients.forEach(ing => allIngredients.push({ name: ing.name, amount: multiplyAmount(ing.amount, persons) }));
+      }
+    });
+  });
+  const merged = {};
+  allIngredients.forEach(ing => {
+    const key = ing.name.toLowerCase().trim();
+    if (!merged[key]) merged[key] = { name: ing.name, amounts: [] };
+    merged[key].amounts.push(ing.amount);
+  });
+  let text = 'Boodschappenlijst (' + persons + ' personen)\n' + '='.repeat(30) + '\n\n';
+  Object.values(merged).sort((a,b) => a.name.localeCompare(b.name)).forEach(item => {
+    const amt = combineAmounts(item.amounts);
+    text += '\u2022 ' + item.name + (amt ? ': ' + amt : '') + '\n';
+  });
+  if (navigator.share) {
+    navigator.share({ title: 'Boodschappenlijst', text: text }).catch(() => {
+      navigator.clipboard.writeText(text).then(() => alert('Gekopieerd!')).catch(() => fallbackCopy(text));
+    });
+  } else {
+    navigator.clipboard.writeText(text).then(() => alert('Boodschappenlijst gekopieerd!')).catch(() => fallbackCopy(text));
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  alert('Boodschappenlijst gekopieerd!');
+}
+
+loadState();
+showTab('weekmenu');
+</script>
+</body>
+</html>
